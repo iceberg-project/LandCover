@@ -1,0 +1,1 @@
+This repo contains code and development for the Land Cover use case, providing spatial coverage of surveyed area, reasonable estimates on atmospheric contributions, and comparisons to a spectral library of known geologic materials.
