@@ -1,0 +1,2 @@
+source activate dev_env
+export PYTHONPATH=/gpfs/projects/LynchGroup/LandCover_project/lib/python3.6/site-packages
