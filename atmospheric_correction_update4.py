@@ -38,10 +38,10 @@ def reader(file):
     # Opens the passed in file...
     with open(file, 'r') as file_read:
         # ...splits each integer into their own element in a list...
-        lines = [line.strip().replace('\n','').split('  ') for line in file_read]
+        lines = [line.strip().replace('\n','').replace('   ', '  ').split('  ') for line in file_read]
         # ...and sets a new list to the 8 bands at the bottom of the .txt.
         band_lines = lines[-8:]
-
+        
     # Closes the file. Generally a good practice
     file_read.close()
     
@@ -49,6 +49,8 @@ def reader(file):
     # otherwise
     for i in range(8):
         band_lines[i] = [float(element) for element in band_lines[i]]
+        if band_lines[i] == '':
+            pass
     
     # Tried to copy only columns 2 and onward of the band data during
     # the coding phase. Gave up and went for the easier but
@@ -218,13 +220,14 @@ def pass_fail_checker(pass_fail_num):
         return 'Fail'
 
 
-def dataset_checker(pass_fail_arr):
+def dataset_checker(pass_fail_arr, pass_fail_stat_arr):
     """
     Checks if any of the bands out of the first seven 'Fail' the test.
-    If any single band does, then the whole data set fails as a default.
+    If any a select number of bands do, then the whole data set fails.
 
     Parameters:
     pass_fail_arr - a list containing the pass/fail status of each band
+    pass_fail_stat_arr - a list containing the numbers compared to 3
 
     Return:
     A string being either Pass or Fail depending on how many Fails there are in
@@ -232,14 +235,16 @@ def dataset_checker(pass_fail_arr):
     """
     # Variable used to keep track of how many Fails there are
     fail_n = 0
-    # Finds out how many fails are in the data set
+    # Finds out how many fails are in the data set. If the 
     for i in range(len(pass_fail_arr)):
-        if pass_fail_arr[i] == 'Fail':
+        # Any band with a comparison number less than five may still be
+        # passable
+        if pass_fail_arr[i] == 'Fail' and pass_fail_stat_arr[i] > 5:
             fail_n += 1
             
     # Change the number here to specify how many fails is the bare minimum
     # for the data set to Fail. 1 is my set default.
-    if fail_n >= 1:
+    if fail_n >= 4:
         return 'Fail'
     else:
         return 'Pass'
@@ -406,7 +411,7 @@ def main():
                                     tester_caller(band_array, intercept_arr, slope_arr)
                 # Checks the pass/fail statuses of each band. Will return 'Fail' if
                 # at least one 'Fail' exists.
-                set_check = dataset_checker(pass_fail_arr)
+                set_check = dataset_checker(pass_fail_arr, pass_fail_stat_arr)
                 
                 # Calls the writer() function. Does most of the file writing.
                 writer(f, folder, pass_fail_stat_arr, pass_fail_arr, intercept_arr, set_check)
