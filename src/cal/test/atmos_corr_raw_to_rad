@@ -2,21 +2,40 @@
 Programmer: Brian Szutu
 Email: bs886@nau.edu
 
-This program is used to take in .txt files of atmospheric spectrographic data
+!!!THIS SCRIPT SHOULD BE PLACED IN THE DIRECTORY ABOVE ALL OF THE IMAGES TO BE PROCESSED!!!
+
+This is a combination of my atmospheric correction script and Brad Spitzbart's
+raw to radiance script.
+
+This program serves two purposes:
+It is used to take in .txt files of atmospheric spectrographic data
 in subfolders in order to calculate the atmospheric correction values needed.
+It then uses Spitzbart's script to convert raw images into their radiance .tif forms
 
 The output files will automatically be sent into a folder called Output Files
-created by the program. The number of output .txt files will vary with the number of subfolders.
+created by the program in the same subdirectory.
+The number of output .txt files will vary with the number of subfolders.
 
-This version will NOT append to an already existing file of the same name (and thus it is safe
-to run this program as many times as needed!). It will alert the user to already existing files
-though...
+This program is safe to run multiple times in the same directory.
+
+Change(s) from update 4 of atmospheric_correction:
+- Changed how pathing works in some areas to hopefully have it work on different OS's
+- Changed where the files are outputted. They are now outputted into the image folder's own
+  Output Files folder.
+- Removed a few useless variables
+
+Version 1.0
 """
 
-# Imports the os and scipy.stats packages
-import os
+# Imports the ElementTree, rasterio, numpy, math, stats, and os packages
+import xml.etree.ElementTree as ET
+import rasterio
+import numpy as np
+import math
 from scipy import stats
+import os
 
+# This block reads and writes files
 # --------------------------------------------------------------------------
 
 def reader(file):
@@ -64,14 +83,16 @@ def reader(file):
     return band_array
 
 
-def writer(file, file_name, pass_fail_stat_arr, pass_fail_arr, intercept_arr, set_check):
+def writer(file, file_name, output_dir, pass_fail_stat_arr, \
+           pass_fail_arr, intercept_arr, set_check):
     """
     Writes into a new file.
 
     Parameters:
     file               - name of a text file in a subfolder
     file_name          - the name of the new file to be created and/or written into.
-                         Same name as the subfolder 
+                         Same name as the subfolder
+    output_dir         - the output directory. Folder specific                 
     pass_fail_stat_arr - a list containing the numbers compared to 3 in order to determine
                          pass/fail status of each band
     pass_fail_arr      - a list containing the pass/fail status of each band
@@ -84,7 +105,7 @@ def writer(file, file_name, pass_fail_stat_arr, pass_fail_arr, intercept_arr, se
     """
 
     # Creates a file to APPEND text to the end of it
-    file_write = open('Output Files\\'+file_name+'.txt', 'a+')
+    file_write = open(os.path.join(output_dir, file_name+'.txt'), 'a+')
 
     # Puts the name of the passed in .txt file at the top
     file_write.write(str(file) + ' RESULTS \n')
@@ -103,6 +124,8 @@ def writer(file, file_name, pass_fail_stat_arr, pass_fail_arr, intercept_arr, se
     file_write.close()
 
 # --------------------------------------------------------------------------
+
+# This block does the calculations for the atmospheric corrections
 # --------------------------------------------------------------------------
 
 
@@ -249,16 +272,18 @@ def dataset_checker(pass_fail_arr, pass_fail_stat_arr):
     else:
         return 'Pass'
 # --------------------------------------------------------------------------
+
+# This block calculates averages
 # --------------------------------------------------------------------------
 
-def avg_intercept(total_intercept_arr, file_count):
+def avg_intercept(total_intercept_arr, txt_count):
     """
     Calculates the AVERAGE ATMOSPHERIC CORRECTION for each band in a subfolder
 
     Parameters:
     total_intercept_arr - a 2D list containing the atmospheric corrections for each band in
                           each .txt file
-    file_count          - the number of .txt files in the subfolder
+    txt_count           - the number of .txt files in the subfolder
 
     Return:
     Returns a list containing the average atmospheric correction for each band in a subfolder
@@ -278,13 +303,13 @@ def avg_intercept(total_intercept_arr, file_count):
         band7_sum += total_intercept_arr[i][6]
 
     # Computes the average intercept.
-    band1_avg = band1_sum / file_count
-    band2_avg = band2_sum / file_count
-    band3_avg = band3_sum / file_count
-    band4_avg = band4_sum / file_count
-    band5_avg = band5_sum / file_count
-    band6_avg = band6_sum / file_count
-    band7_avg = band7_sum / file_count
+    band1_avg = band1_sum / txt_count
+    band2_avg = band2_sum / txt_count
+    band3_avg = band3_sum / txt_count
+    band4_avg = band4_sum / txt_count
+    band5_avg = band5_sum / txt_count
+    band6_avg = band6_sum / txt_count
+    band7_avg = band7_sum / txt_count
 
     # Puts the avg intercept data into an array.
     band_avg_arr = [band1_avg, band2_avg, band3_avg, band4_avg, \
@@ -292,20 +317,21 @@ def avg_intercept(total_intercept_arr, file_count):
     
     return band_avg_arr
 
-def avg_writer(file_name, band_avg_arr):
+def avg_writer(file_name, output_dir, band_avg_arr):
     """
     Writes the avg intercept to the document at the end
 
     Parameters:
     file_name    - the name of the file to be appended to. In the same loop, it should be the
                    same name as the one mentioned way above in the writer() function
+    output_dir   - the output directory. File specific
     band_avg_arr - a list containing the average atmospheric correction for each band in a
                    subfolder
 
     Return:
     None
     """
-    file_write = open('Output Files\\'+file_name+'.txt', 'a+')
+    file_write = open(os.path.join(output_dir, file_name+'.txt'), 'a+')
     file_write.write('ATMOSPHERIC CORRECTION AVG: \n')
     for x in range(7):
         file_write.write('BAND' + str(x+1) + ' AVG: '
@@ -328,10 +354,6 @@ def main():
     
     # Finds the current directory and appends a new folder to be made
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    final_dir = os.path.join(current_dir, 'Output Files')
-    # If the folder doesn't exist, then it will be made.
-    if not os.path.exists(final_dir):
-        os.makedirs(final_dir)
 
     # Empty list holds all of the relevent folders in the directory
     folders = []
@@ -339,7 +361,7 @@ def main():
     # for each file/folder in the directory...
     for file in os.listdir(current_dir):
         # if there is a . or the something is named Output Files...
-        if "." in file or file == "Output Files":
+        if "." in file or file == 'Output Files':
             # ...Don't do anything with them
             continue
         else:
@@ -351,10 +373,19 @@ def main():
     for folder in folders:
         
         # List used to hold the names of all the .txt files in a folder.
-        files = []
-        
+        txt_files = []
         # Used to count the number of .txt files
-        file_count = 0
+        txt_count = 0
+
+        # Holds the .xml file used in the raw to radiance conversion
+        xml_file = ''
+        # Counts the number of .xml files in the subfolder
+        xml_count = 0
+
+        # Holds the .tif files to be converted from raw to rad
+        tif_files = []
+        # Counts the number of .tif files
+        tif_count = 0
 
         # Makes a temporary directory to the folder to work with the text files inside
         folder_dir = os.path.join(current_dir, folder)
@@ -363,20 +394,29 @@ def main():
         for file in os.listdir(folder_dir):
             # If it is a .txt file...
             if file.endswith('.txt'):
-                # Append the name of the file to the file tracking list
-                files.append(file)
-                # and add 1 to the file count
-                file_count += 1
+                # Append the name of the file to the .txt tracking list
+                txt_files.append(file)
+                # and add 1 to the .txt count
+                txt_count += 1
+            # If it is a .tif file, NOT a rad.tif file...
+            elif (file.endswith('.tif') and not file.endswith('rad.tif')):
+                # Append the name of the file to the .tif tracking list
+                tif_files.append(file)
+                # and add 1 to the .tif count
+                tif_count += 1
+            # if it is a .xml file...
+            elif file.endswith('.xml'):
+                # Save the name of the file
+                xml_file = file
+                # and add 1 to the .xml count
+                xml_count += 1
+            else:
+                continue
         
-        # If there are no text files in the subfolder, don't do anything in it
-        if file_count == 0:
-            continue
-        
-        
-        # Makes the output file name the name of the folder. Will place it
-        # within the Output Files folder
-        output_dir = os.path.join(final_dir, 'Output Files')
-        complete_name = os.path.join(output_dir, folder+'.txt')
+        # Creates the Output Files folder if it doesn't exist in the image subfolder already
+        output_dir = os.path.join(folder_dir, 'Output Files')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
         # Initializes a list. Holds lists of intercepts, with each nested list corresponding
         # to each file.
@@ -384,13 +424,13 @@ def main():
 
         # Checks to see if a .txt file of the same name as a subfolder
         # already exists. Outputs True or False
-        output_file_exists = os.path.isfile('Output Files\\'+folder+'.txt')
+        txt_file_exists = os.path.isfile(os.path.join(output_dir, folder+'.txt'))
 
-        # If the output file does NOT exist...
-        if output_file_exists != True:
+        # If the output file does NOT exist AND the .txt file count > 0...
+        if not txt_file_exists and txt_count > 0:
 
             # This loop does the heavy lifting. For each .txt file within the folder...
-            for f in files:
+            for f in txt_files:
 
                 # Makes a temporary directory to a text file in a folder
                 text_dir = os.path.join(folder_dir, f)
@@ -414,20 +454,80 @@ def main():
                 set_check = dataset_checker(pass_fail_arr, pass_fail_stat_arr)
                 
                 # Calls the writer() function. Does most of the file writing.
-                writer(f, folder, pass_fail_stat_arr, pass_fail_arr, intercept_arr, set_check)
+                writer(f, folder, output_dir, pass_fail_stat_arr, pass_fail_arr, \
+                       intercept_arr, set_check)
 
             # Outside of the loop. Calculates the avg intercepts
             # between all of the files
-            band_avg_arr = avg_intercept(total_intercept_arr, file_count)
+            band_avg_arr = avg_intercept(total_intercept_arr, txt_count)
             # Writes the avg intercepts into the document.
-            avg_writer(folder, band_avg_arr)
+            avg_writer(folder, output_dir, band_avg_arr)
             # Prints a message that the file was successfully created
             print(folder+'.txt was successfully created!')        
 
         # If the file already exists...
-        else:
+        elif txt_file_exists:
             # Print that the .txt already exists
-            print(folder+'.txt already exists!')            
+            print(folder+'.txt already exists!')        
+        # If the .txt count is 0...
+        elif txt_count == 0:
+            # Print that there are no .txt files to analyze
+            print('There are no .txt files to analyze in ' + folder + '!')
+        else:
+            continue
+
+    # This block is the beginning of the modified Spitzbart script
+    #////////////////////////////////////////////////
+
+        # If there are .xml and .tif files...
+        if xml_count != 0 and tif_count != 0:
+            # For each .tif file in the folder...
+            for f in tif_files:
+
+                # Sees if an output file for the raw image being analyzed exists...
+                rad_file_exists = os.path.isfile(os.path.join(output_dir, f+'_rad.tif'))
+
+                # If the rad.tif file doesn't exist, use Spitzbart's script
+                if not rad_file_exists:
+                    tree=ET.parse(os.path.join(folder, xml_file))
+                    root = tree.getroot()
+
+                    # collect image metadata
+                    bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
+
+                    src = rasterio.open(os.path.join(folder, f))
+                    meta = src.meta
+                    # Update meta to float64
+                    meta.update(dtype = rasterio.float64)
+                    with rasterio.open(os.path.join(output_dir, f+'_rad.tif'), 'w', **meta) as dst:
+                        i = 0
+                        for band in bands:
+                            rt = root[1][2].find(band)
+                            # collect band metadata
+                            abscalfactor = float(rt.find('ABSCALFACTOR').text)
+                            effbandwidth = float(rt.find('EFFECTIVEBANDWIDTH').text)
+                            print(bands[i])
+                            print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
+                            ### Read each layer and write it to stack
+                            rad = src.read(i+1)*abscalfactor/effbandwidth
+                            print(rad[0,0],rad.dtype)
+                            dst.write_band(i+1, rad)
+                            i += 1
+                    dst.close()
+                    print(f + ' is read.')
+
+                # If the rad.tif file already exists, print out a message saying so
+                elif rad_file_exists:
+                    print(f+'_rad.tif already exists!')
+        # If there are no .xml files, print out a message saying so
+        elif xml_count == 0:
+            print('There are no .xml files in ' + folder + '!')
+        # If there are no raw .tif files to be analyzed, print out a message saying so
+        elif tif_count == 0:
+            print('There are no .tif files in ' + folder + '!')
+        else:
+            continue
+    #////////////////////////////////////////////////
 
     # Program felt empty without a line saying that there was no syntax error.
     print('All new files successfully created! Look in Output Files for the results.')
