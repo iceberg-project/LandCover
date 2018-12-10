@@ -26,6 +26,7 @@ Version 1.1
 # Imports the ElementTree, rasterio, numpy, math, stats, and os packages
 import xml.etree.ElementTree as ET
 import rasterio
+from spectral import *
 import numpy as np
 import math
 from scipy import stats
