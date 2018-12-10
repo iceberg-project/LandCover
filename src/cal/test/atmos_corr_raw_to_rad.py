@@ -2,8 +2,6 @@
 Programmer: Brian Szutu
 Email: bs886@nau.edu
 
-!!!THIS SCRIPT SHOULD BE PLACED IN THE DIRECTORY ABOVE ALL OF THE IMAGES TO BE PROCESSED!!!
-
 This is a combination of my atmospheric correction script and Brad Spitzbart's
 raw to radiance script.
 
@@ -18,13 +16,11 @@ The number of output .txt files will vary with the number of subfolders.
 
 This program is safe to run multiple times in the same directory.
 
-Change(s) from update 4 of atmospheric_correction:
-- Changed how pathing works in some areas to hopefully have it work on different OS's
-- Changed where the files are outputted. They are now outputted into the image folder's own
-  Output Files folder.
-- Removed a few useless variables
+Change(s) from version 1.0 of atmo_correction_radiance.py:
+- Allows the user to input a path to the images, allowing the script to be placed
+  outside of the directory with the images
 
-Version 1.0
+Version 1.1
 """
 
 # Imports the ElementTree, rasterio, numpy, math, stats, and os packages
@@ -351,15 +347,23 @@ def main():
     Return:
     None
     """
+
+    # Prints the directory the script is in
+    print("Current directory: " + os.path.dirname(os.path.abspath(__file__)))
     
     # Finds the current directory and appends a new folder to be made
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    working_dir = input("Please input the FULL path to the directory with the images: \n")
+
+    # Will keep asking the user to input a valid path. Use CTRL + C to manually terminate
+    # the program
+    while (not os.path.exists(working_dir)):
+        working_dir = input("That path does not exist. Please input a path: \n")
 
     # Empty list holds all of the relevent folders in the directory
     folders = []
 
     # for each file/folder in the directory...
-    for file in os.listdir(current_dir):
+    for file in os.listdir(working_dir):
         # if there is a . or the something is named Output Files...
         if "." in file or file == 'Output Files':
             # ...Don't do anything with them
@@ -388,7 +392,7 @@ def main():
         tif_count = 0
 
         # Makes a temporary directory to the folder to work with the text files inside
-        folder_dir = os.path.join(current_dir, folder)
+        folder_dir = os.path.join(working_dir, folder)
 
         # For each file in the current directory...
         for file in os.listdir(folder_dir):
@@ -408,6 +412,7 @@ def main():
             elif file.endswith('.xml'):
                 # Save the name of the file
                 xml_file = file
+                print(xml_file)
                 # and add 1 to the .xml count
                 xml_count += 1
             else:
@@ -489,13 +494,13 @@ def main():
 
                 # If the rad.tif file doesn't exist, use Spitzbart's script
                 if not rad_file_exists:
-                    tree=ET.parse(os.path.join(folder, xml_file))
+                    tree=ET.parse(os.path.join(working_dir, folder, xml_file))
                     root = tree.getroot()
 
                     # collect image metadata
                     bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
 
-                    src = rasterio.open(os.path.join(folder, f))
+                    src = rasterio.open(os.path.join(working_dir, folder, f))
                     meta = src.meta
                     # Update meta to float64
                     meta.update(dtype = rasterio.float64)
