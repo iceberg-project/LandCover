@@ -412,7 +412,6 @@ def main():
             elif file.endswith('.xml'):
                 # Save the name of the file
                 xml_file = file
-                print(xml_file)
                 # and add 1 to the .xml count
                 xml_count += 1
             else:
