@@ -402,8 +402,10 @@ def main():
                 txt_files.append(file)
                 # and add 1 to the .txt count
                 txt_count += 1
-            # If it is a .tif file, NOT a rad.tif file...
-            elif (file.endswith('.tif') and not file.endswith('rad.tif')):
+            # If it is a raw image file, NOT a radiance, atmospherically corrected, nor a
+            # reflectance image...
+            elif (file.endswith('.tif') and not file.endswith('rad.tif')
+                  and not file.endswith('atmcorr.tif') and not file.endswith('refl.tif')):
                 # Append the name of the file to the .tif tracking list
                 tif_files.append(file)
                 # and add 1 to the .tif count
