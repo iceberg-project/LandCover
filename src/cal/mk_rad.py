@@ -12,7 +12,13 @@ bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N
 src = rasterio.open('In/orthoWV02_13NOV131639373-M1BS-1030010029192A00_u16ns3031.tif')
 meta = src.meta
 # Update meta to float64
-meta.update(dtype = rasterio.float64)
+meta.update({"driver": "GTiff",
+             "compress": "LZW",
+             "count": "8",
+             "dtype": "float64",
+             "bigtiff": "YES",
+             "nodata": 255})
+
 with rasterio.open('orthoWV02_13NOV131639373-M1BS-1030010029192A00_u16ns3031_rad.tif', 'w', **meta) as dst:
   i = 0
   for band in bands:
