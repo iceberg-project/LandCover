@@ -1,6 +1,8 @@
 """
-Programmer: Brian Szutu
+Author: Brian Szutu
 Email: bs886@nau.edu
+License: NAU
+Copyright: 2018-2019
 
 This is a combination of my atmospheric correction script and Brad Spitzbart's
 raw to radiance script.
@@ -430,7 +432,7 @@ def main():
 
         # Checks to see if a .txt file of the same name as a subfolder
         # already exists. Outputs True or False
-        txt_file_exists = os.path.isfile(os.path.join(output_dir, folder+'.txt'))
+        txt_file_exists = os.path.isfile(os.path.join(output_dir, folder + '.txt'))
 
         # If the output file does NOT exist AND the .txt file count > 0...
         if not txt_file_exists and txt_count > 0:
