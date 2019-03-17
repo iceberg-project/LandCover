@@ -493,7 +493,7 @@ def main():
             for f in tif_files:
 
                 # Sees if an output file for the raw image being analyzed exists...
-                rad_file_exists = os.path.isfile(os.path.join(output_dir, f+'_rad.tif'))
+                rad_file_exists = os.path.isfile(os.path.join(output_dir, f + '_rad.tif'))
 
                 # If the rad.tif file doesn't exist, use Spitzbart's script
                 if not rad_file_exists:
