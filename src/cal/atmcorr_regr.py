@@ -1,5 +1,5 @@
 """
-Programmer: Brian Szutu
+Author: Brian Szutu
 Email: bs886@nau.edu
 
 This program is used to take in .txt files of atmospheric spectrographic data
