@@ -7,11 +7,6 @@ import os
 # Imports the Earth-Sun distances in AU by date.
 from earth_sun_dist import date_distance
 
-"""
-CURRENT ALGORITHM DOESN'T WORK WITH ATMCORR.TIF FILES
-"""
-
-#///////////
 # Prints the directory the script is in
 print("Current directory: " + os.path.dirname(os.path.abspath(__file__)))
 
