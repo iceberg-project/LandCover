@@ -128,10 +128,14 @@ def main():
                         "dtype": "float64",
                         "bigtiff": "YES",
                         "nodata": 255})
-                    
+
+                    # Creates the rad.tif file to be written into
                     with rasterio.open(os.path.join(folder_dir, f + '_rad.tif'),
                                        'w', **meta) as dst:
                         i = 0
+
+                        # The commented out print statements were a part of Spitzbart's
+                        # script. If they are needed, they can be commented back in -Brian
                         for band in bands:
                             rt = root[1][2].find(band)
                             # collect band metadata
