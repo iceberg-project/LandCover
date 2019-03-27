@@ -1,22 +1,55 @@
 """
 Author: Brian Szutu
 Email: bs886@nau.edu
+License: NAU
+Copyright: 2018-2019
 
-This program is used to take in .txt files of atmospheric spectrographic data
+This script is used to take in .txt files of atmospheric spectrographic data
 in subfolders in order to calculate the atmospheric correction values needed.
 
-The output files will automatically be sent into a folder called Output Files
-created by the program. The number of output .txt files will vary with the number of subfolders.
+The output files will automatically be sent into the same folder as the analyzed .txt
+files.
 
-This version will NOT append to an already existing file of the same name (and thus it is safe
-to run this program as many times as needed!). It will alert the user to already existing files
-though...
+This script is safe to run multiple times in the same directory.
+
+Change(s) from version 1.1 of atmcorr_regr.py:
+- Set the output directory to the folder directory instead for more consistency
+  with the layout of each image folder.
+- Removed the radiance script and put it into its own script to compartmentalize
+  the script's purpose.
+- Takes in the directory from console input rather than through Python
+
+Version 1.2
 """
 
-# Imports the os and scipy.stats packages
-import os
+# Imports the stats, argsparse, and os packages
 from scipy import stats
+import argparse
+import os
 
+def args_parser():
+    """
+    Reads the image directory passed in from console.
+
+    Parameters:
+    None
+
+    Return:
+    Returns a directory that has the images to be analyzed within it
+    """
+
+    # Creates an ArgumentParser object to hold the console input
+    parser = argparse.ArgumentParser()
+    
+    # Adds an argument to the parser created above. Holds the
+    # inputted directory as a string
+    parser.add_argument('-ip', '--input_dir', type=str,
+                        help='The directory containing the images.')
+
+    # Returns the passed in directory
+    return parser.parse_args().input_dir
+
+# This block reads and writes files
 # --------------------------------------------------------------------------
 
 def reader(file):
@@ -24,7 +57,7 @@ def reader(file):
     Reads ONE file passed into it.
 
     Parameters:
-    file - The file to be read. It's actually a directory of the file
+    file - The file to be read. It's actually the directory of the file
 
     Return:
     Returns an 2D list containing ALL of the bands and their respective data. Each row represents
@@ -64,14 +97,16 @@ def reader(file):
     return band_array
 
 
-def writer(file, file_name, pass_fail_stat_arr, pass_fail_arr, intercept_arr, set_check):
+def writer(file, file_name, output_dir, pass_fail_stat_arr, 
+           pass_fail_arr, intercept_arr, set_check):
     """
     Writes into a new file.
 
     Parameters:
     file               - name of a text file in a subfolder
     file_name          - the name of the new file to be created and/or written into.
-                         Same name as the subfolder 
+                         Same name as the subfolder
+    output_dir         - the output directory. Folder specific                 
     pass_fail_stat_arr - a list containing the numbers compared to 3 in order to determine
                          pass/fail status of each band
     pass_fail_arr      - a list containing the pass/fail status of each band
@@ -84,7 +119,7 @@ def writer(file, file_name, pass_fail_stat_arr, pass_fail_arr, intercept_arr, se
     """
 
     # Creates a file to APPEND text to the end of it
-    file_write = open('Output Files\\'+file_name+'.txt', 'a+')
+    file_write = open(os.path.join(output_dir, file_name+'.txt'), 'a+')
 
     # Puts the name of the passed in .txt file at the top
     file_write.write(str(file) + ' RESULTS \n')
@@ -103,6 +138,8 @@ def writer(file, file_name, pass_fail_stat_arr, pass_fail_arr, intercept_arr, se
     file_write.close()
 
 # --------------------------------------------------------------------------
+
+# This block does the calculations for the atmospheric corrections
 # --------------------------------------------------------------------------
 
 
@@ -249,16 +286,18 @@ def dataset_checker(pass_fail_arr, pass_fail_stat_arr):
     else:
         return 'Pass'
 # --------------------------------------------------------------------------
+
+# This block calculates averages
 # --------------------------------------------------------------------------
 
-def avg_intercept(total_intercept_arr, file_count):
+def avg_intercept(total_intercept_arr, txt_count):
     """
     Calculates the AVERAGE ATMOSPHERIC CORRECTION for each band in a subfolder
 
     Parameters:
     total_intercept_arr - a 2D list containing the atmospheric corrections for each band in
                           each .txt file
-    file_count          - the number of .txt files in the subfolder
+    txt_count           - the number of .txt files in the subfolder
 
     Return:
     Returns a list containing the average atmospheric correction for each band in a subfolder
@@ -278,13 +317,13 @@ def avg_intercept(total_intercept_arr, file_count):
         band7_sum += total_intercept_arr[i][6]
 
     # Computes the average intercept.
-    band1_avg = band1_sum / file_count
-    band2_avg = band2_sum / file_count
-    band3_avg = band3_sum / file_count
-    band4_avg = band4_sum / file_count
-    band5_avg = band5_sum / file_count
-    band6_avg = band6_sum / file_count
-    band7_avg = band7_sum / file_count
+    band1_avg = band1_sum / txt_count
+    band2_avg = band2_sum / txt_count
+    band3_avg = band3_sum / txt_count
+    band4_avg = band4_sum / txt_count
+    band5_avg = band5_sum / txt_count
+    band6_avg = band6_sum / txt_count
+    band7_avg = band7_sum / txt_count
 
     # Puts the avg intercept data into an array.
     band_avg_arr = [band1_avg, band2_avg, band3_avg, band4_avg, \
@@ -292,20 +331,21 @@ def avg_intercept(total_intercept_arr, file_count):
     
     return band_avg_arr
 
-def avg_writer(file_name, band_avg_arr):
+def avg_writer(file_name, output_dir, band_avg_arr):
     """
     Writes the avg intercept to the document at the end
 
     Parameters:
     file_name    - the name of the file to be appended to. In the same loop, it should be the
                    same name as the one mentioned way above in the writer() function
+    output_dir   - the output directory. File specific
     band_avg_arr - a list containing the average atmospheric correction for each band in a
                    subfolder
 
     Return:
     None
     """
-    file_write = open('Output Files\\'+file_name+'.txt', 'a+')
+    file_write = open(os.path.join(output_dir, file_name + '.txt'), 'a+')
     file_write.write('ATMOSPHERIC CORRECTION AVG: \n')
     for x in range(7):
         file_write.write('BAND' + str(x+1) + ' AVG: '
@@ -326,20 +366,16 @@ def main():
     None
     """
     
-    # Finds the current directory and appends a new folder to be made
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    final_dir = os.path.join(current_dir, 'Output Files')
-    # If the folder doesn't exist, then it will be made.
-    if not os.path.exists(final_dir):
-        os.makedirs(final_dir)
+    # Saves the console-passed directory to a variable for future use
+    working_dir = args_parser()
 
     # Empty list holds all of the relevent folders in the directory
     folders = []
 
     # for each file/folder in the directory...
-    for file in os.listdir(current_dir):
+    for file in os.listdir(working_dir):
         # if there is a . or the something is named Output Files...
-        if "." in file or file == "Output Files":
+        if "." in file or file == 'Output Files':
             # ...Don't do anything with them
             continue
         else:
@@ -351,32 +387,28 @@ def main():
     for folder in folders:
         
         # List used to hold the names of all the .txt files in a folder.
-        files = []
-        
-        # Used to count the number of .txt files
-        file_count = 0
+        # Variable initialized to count the number of .txt files
+        txt_files = []; txt_count = 0
 
         # Makes a temporary directory to the folder to work with the text files inside
-        folder_dir = os.path.join(current_dir, folder)
+        folder_dir = os.path.join(working_dir, folder)
 
         # For each file in the current directory...
         for file in os.listdir(folder_dir):
-            # If it is a .txt file...
-            if file.endswith('.txt'):
-                # Append the name of the file to the file tracking list
-                files.append(file)
-                # and add 1 to the file count
-                file_count += 1
+            # If it is a .txt file and it contains the band data...
+            if file.endswith('.txt') and 'atmcorr' in file:
+                # Append the name of the file to the .txt tracking list
+                txt_files.append(file)
+                # and add 1 to the .txt count
+                txt_count += 1
+            # If it is a raw image file, NOT a radiance, atmospherically corrected, nor a
+            # reflectance image...
+            else:
+                continue
         
-        # If there are no text files in the subfolder, don't do anything in it
-        if file_count == 0:
-            continue
-        
-        
-        # Makes the output file name the name of the folder. Will place it
-        # within the Output Files folder
-        output_dir = os.path.join(final_dir, 'Output Files')
-        complete_name = os.path.join(output_dir, folder+'.txt')
+        # A remnant of the previous version. Easier to change how the output directory
+        # is defined than to rename instance of output_dir and fear that something may break
+        output_dir = folder_dir
 
         # Initializes a list. Holds lists of intercepts, with each nested list corresponding
         # to each file.
@@ -384,13 +416,13 @@ def main():
 
         # Checks to see if a .txt file of the same name as a subfolder
         # already exists. Outputs True or False
-        output_file_exists = os.path.isfile('Output Files\\'+folder+'.txt')
+        txt_file_exists = os.path.isfile(os.path.join(output_dir, folder + '.txt'))
 
-        # If the output file does NOT exist...
-        if output_file_exists != True:
+        # If the output file does NOT exist AND the .txt file count > 0...
+        if not txt_file_exists and txt_count > 0:
 
             # This loop does the heavy lifting. For each .txt file within the folder...
-            for f in files:
+            for f in txt_files:
 
                 # Makes a temporary directory to a text file in a folder
                 text_dir = os.path.join(folder_dir, f)
@@ -414,23 +446,31 @@ def main():
                 set_check = dataset_checker(pass_fail_arr, pass_fail_stat_arr)
                 
                 # Calls the writer() function. Does most of the file writing.
-                writer(f, folder, pass_fail_stat_arr, pass_fail_arr, intercept_arr, set_check)
+                writer(f, folder, output_dir, pass_fail_stat_arr, pass_fail_arr, \
+                       intercept_arr, set_check)
 
             # Outside of the loop. Calculates the avg intercepts
             # between all of the files
-            band_avg_arr = avg_intercept(total_intercept_arr, file_count)
+            band_avg_arr = avg_intercept(total_intercept_arr, txt_count)
             # Writes the avg intercepts into the document.
-            avg_writer(folder, band_avg_arr)
+            avg_writer(folder, output_dir, band_avg_arr)
             # Prints a message that the file was successfully created
             print(folder+'.txt was successfully created!')        
 
         # If the file already exists...
-        else:
+        elif txt_file_exists:
             # Print that the .txt already exists
-            print(folder+'.txt already exists!')            
+            print(folder+'.txt already exists!')        
+        # If the .txt count is 0...
+        elif txt_count == 0:
+            # Print that there are no .txt files to analyze
+            print('There are no .txt files to analyze in ' + folder + '!')
+        else:
+            continue
 
     # Program felt empty without a line saying that there was no syntax error.
     print('All new files successfully created! Look in Output Files for the results.')
 
-# Calls the main() function
-main()
+# Runs the script if directly called
+if __name__ == '__main__':
+    main()
