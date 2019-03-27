@@ -102,6 +102,8 @@ def main():
                 xml_file = file
                 # ...and add 1 to the .xml count
                 xml_count += 1
+            else:
+                continue
     
         # If there are .xml and .tif files...
         if xml_count != 0 and tif_count != 0:
