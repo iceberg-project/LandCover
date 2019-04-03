@@ -90,14 +90,15 @@ def main():
         # for each file inside of the folder...
         for file in os.listdir(folder_dir):
             # if the image is a raw image...
-            if (file.endswith('.tif') and not file.endswith('rad.tif')
-                and not file.endswith('atmcorr.tif') and not file.endswith('refl.tif')):
+            if (file.endswith('.tif') and ('rad' not in file)
+                and ('atmcorr' not in file) and 'refl' not in file)
+                and ('P1BS' not in file)):
                 # ...append it to the list of raw images
                 tif_files.append(file)
                 # ...and add 1 to the .tif count
                 tif_count += 1
             # if the file is a .xml file...
-            elif file.endswith('.xml'):
+            elif file.endswith('.xml') and ('P1BS' not in file):
                 # ...save the file to be used
                 xml_file = file
                 # ...and add 1 to the .xml count
@@ -140,6 +141,7 @@ def main():
                         # script. If they are needed, they can be commented back in -Brian
                         for band in bands:
                             rt = root[1][2].find(band)
+                            print(type(rt))
                             # collect band metadata
                             abscalfactor = float(rt.find('ABSCALFACTOR').text)
                             effbandwidth = float(rt.find('EFFECTIVEBANDWIDTH').text)
@@ -153,11 +155,11 @@ def main():
                             dst.write_band(i + 1, rad)
                             i += 1
                     dst.close()
-                    print(f + ' is read.')
+                    print(f + ' has been processed.')
 
                 # If the rad.tif file already exists, print out a message saying so
                 elif rad_file_exists:
-                    print(f+'_rad.tif already exists!')
+                    print(f.replace('.tif', '_rad.tif') + ' already exists!')
         # If there are no .xml files, print out a message saying so
         elif xml_count == 0:
             print('There are no .xml files in ' + folder + '!')
