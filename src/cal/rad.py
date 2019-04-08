@@ -111,7 +111,7 @@ def main():
             # for each .tif file in the folder...
             for f in tif_files:
                 # Sees if an output file for the raw image being analyzed exists...
-                rad_file_exists = os.path.isfile(os.path.join(folder_dir, f + '_rad.tif'))
+                rad_file_exists = os.path.isfile(os.path.join(folder_dir, f.replace('.tif', '_rad.tif')))
 
                 # If the radiance image doesn't exist, use Spitzbart's script to make one
                 if not rad_file_exists:
@@ -133,7 +133,7 @@ def main():
                         "nodata": 255})
 
                     # Creates the rad.tif file to be written into
-                    with rasterio.open(os.path.join(folder_dir, f + '_rad.tif'),
+                    with rasterio.open(os.path.join(folder_dir, f.replace('.tif', '_rad.tif')),
                                        'w', **meta) as dst:
                         i = 0
 
