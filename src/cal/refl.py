@@ -118,7 +118,7 @@ def main():
             # for each detected corrected image...
             for f2 in atmcorr_files:
                 # Check to see if the image was already processed
-                refl_file_exists = os.path.isfile(os.path.join(output_dir, f2+'_atmcorr_refl.tif'))
+                refl_file_exists = os.path.isfile(os.path.join(output_dir, f2.replace('.tif', '_refl.tif'))
 
                 # If it wasn't processed...
                 if not refl_file_exists:
@@ -148,7 +148,7 @@ def main():
                     meta = src.meta
                     # Update meta to float64
                     meta.update(dtype = rasterio.float64)
-                    with rasterio.open(os.path.join(output_dir, f2+'_refl.tif', 'w', **meta)) as dst:
+                    with rasterio.open(os.path.join(output_dir, f2.replace('.tif', '_refl.tif'), 'w', **meta)) as dst:
                         i = 0
 
                         # The commented out print statements were a part of Spitzbart's
