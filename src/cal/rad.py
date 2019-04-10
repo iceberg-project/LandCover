@@ -91,7 +91,8 @@ def main():
         for file in os.listdir(folder_dir):
             # if the image is a raw image...
             if (file.endswith('.tif') and ('rad' not in file)
-                and ('atmcorr' not in file) and 'refl' not in file)
+                and ('atmcorr' not in file) 
+                and ('refl' not in file)
                 and ('P1BS' not in file)):
                 # ...append it to the list of raw images
                 tif_files.append(file)
