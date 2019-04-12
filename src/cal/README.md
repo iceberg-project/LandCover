@@ -1,3 +1,3 @@
 landcover.py - prototype, replaced<br/>
-mk_rad.py - convert raw digital number tif input to top-of-atmosphere radiance<br/>
-mk_spec_ang.py - calculate spectral angles using TOA radiance input 
+rad.py - convert raw digital number tif input to top-of-atmosphere radiance<br/>
+refl.py - convert either radiance tif input to top-of-atmosphere reflectance or atmospherically corrected radiance tif input to atmospherically corrected reflectance
