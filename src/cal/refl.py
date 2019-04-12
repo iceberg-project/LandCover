@@ -118,7 +118,7 @@ def main():
             # for each detected corrected image...
             for f2 in atmcorr_files:
                 # Check to see if the image was already processed
-                refl_file_exists = os.path.isfile(os.path.join(output_dir, f2.replace('.tif', '_refl.tif'))
+                refl_file_exists = os.path.isfile(os.path.join(output_dir, f2.replace('.tif', '_refl.tif')))
 
                 # If it wasn't processed...
                 if not refl_file_exists:
