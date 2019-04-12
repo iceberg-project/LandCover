@@ -85,7 +85,7 @@ def main():
 
         # Initialize a list to hold all of the corrected .tif images.
         # Initialize a varaible to count the number of corrected .tif files
-        atmcorr_files = []; atmcorr_count = 0
+        refl_ready_files = []; refl_ready_count = 0
 
         # Stores the subfolder directory
         folder_dir = os.path.join(working_dir, folder)
@@ -101,9 +101,21 @@ def main():
             # if the file is a corrected image and is NOT a P1BS image...
             elif file.endswith('atmcorr.tif') and ('P1BS' not in file):
                 # append it to the list of corrected images...
-                atmcorr_files.append(file)
+                refl_ready_files.append(file)
                 # and add 1 to the image count
-                atmcorr_count += 1
+                refl_ready_count += 1
+            else:
+                continue
+
+        # Rerunning the loop to check for rad.tif files...
+        for file in os.listdir(folder_dir):
+            # if there isn't an atmospherically corrected image...
+            if (file.endswith('rad.tif') and ('P1BS' not in file)
+                and file.replace('.tif', '_atmcorr.tif') not in refl_ready_files):
+                # use the radiance image to convert it to reflectance...
+                refl_ready_files.append(file)
+                # and add 1 to the image count
+                refl_ready_count += 1
             else:
                 continue
 
@@ -113,10 +125,10 @@ def main():
         output_dir = folder_dir
 
         # If there was an xml and at least one corrected image detected...
-        if xml_count!= 0 and atmcorr_count != 0:
+        if xml_count!= 0 and refl_ready_count != 0:
 
             # for each detected corrected image...
-            for f2 in atmcorr_files:
+            for f2 in refl_ready_files:
                 # Check to see if the image was already processed
                 refl_file_exists = os.path.isfile(os.path.join(output_dir, f2.replace('.tif', '_refl.tif')))
 
@@ -151,29 +163,26 @@ def main():
                     with rasterio.open(os.path.join(output_dir, f2.replace('.tif', '_refl.tif'), 'w', **meta)) as dst:
                         i = 0
 
-                        # The commented out print statements were a part of Spitzbart's
-                        # script. If they are needed, they can be commented back in -Brian
+                        # The commented out print statement was a part of Spitzbart's
+                        # script. If it is needed, it can be commented back in -Brian
                         for band in bands:
-                            rt = root[1][2].find(band)
-                            # collect band metadata
-                            abscalfactor = float(rt.find('ABSCALFACTOR').text)
-                            effbandwidth = float(rt.find('EFFECTIVEBANDWIDTH').text)
-                            # print(bands[i])
-                            # print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
                             ### Read each layer and write it to stack
-                            rad = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.sin(meansunel))
-                            # print(rad[0,0],rad.dtype)
-                            dst.write_band(i+1, rad)
+                            refl = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.sin(meansunel))
+                            # print(refl[0,0],refl.dtype)
+                            dst.write_band(i+1, refl)
                             i += 1
-
-                        # If the rad.tif file already exists, print out a message saying so
+                    
+                    # Prints that a certain image was successfully converted to reflectance
+                    print(f2 + ' has been processed.')
+                    
+                        # If the refl.tif file already exists, print out a message saying so
                 elif refl_file_exists:
                     print(f2.replace('.tif', '_refl.tif') + ' already exists!')
         # If there are no .xml files, print out a message saying so
         elif xml_count == 0:
             print('There are no .xml files in ' + folder + '!')
         # If there are no raw .tif files to be analyzed, print out a message saying so
-        elif tif_count == 0:
+        elif refl_ready_count == 0:
             print('There are no corrected .tif images in ' + folder + '!')
         else:
             continue
