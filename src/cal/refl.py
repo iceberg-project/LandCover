@@ -149,8 +149,8 @@ def main():
                     bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
                     rt = root[1][2].find('IMAGE')
                     satid = rt.find('SATID').text
-                    meansunel = rt.find('MEANSUNEL').text
-
+                    meansunel = float(rt.find('MEANSUNEL').text)
+                    
                     if satid == 'WV02':
                         esun = [1758.2229,1974.2416,1856.4104,1738.4791,1559.4555,1342.0695,1069.7302,861.2866] # WV02
                     if satid == 'WV03':
