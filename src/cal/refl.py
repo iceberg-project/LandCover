@@ -16,7 +16,6 @@ atmospherically corrected image.
 
 import xml.etree.ElementTree as ET
 import rasterio
-import numpy as np
 import math
 import os
 import argparse
@@ -111,7 +110,7 @@ def main():
         for file in os.listdir(folder_dir):
             # if there isn't an atmospherically corrected image...
             if (file.endswith('rad.tif') and ('P1BS' not in file)
-                and file.endswith('atmcorr.tif') not in refl_ready_files):
+                and file.replace('rad.tif', 'rad_atmcorr.tif') not in refl_ready_files):
                 # use the radiance image to convert it to reflectance...
                 refl_ready_files.append(file)
                 # and add 1 to the image count
@@ -144,7 +143,16 @@ def main():
 
                     tree=ET.parse(os.path.join(working_dir, folder, xml_file))
                     root = tree.getroot()
-
+                    
+                    src = rasterio.open(os.path.join(working_dir, folder, f2))
+                    meta = src.meta
+                    # Update meta to float64
+                    meta.update({"driver": "GTiff",
+                        "count": "8",
+                        "dtype": "float64",
+                        "bigtiff": "YES",
+                        "nodata": 255})
+                    
                     # collect image metadata
                     bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
                     rt = root[1][2].find('IMAGE')
@@ -156,10 +164,6 @@ def main():
                     if satid == 'WV03':
                         esun = [1803.9109,1982.4485,1857.1232,1746.5947,1556.9730,1340.6822,1072.5267,871.1058] # WV03
 
-                    src = rasterio.open(os.path.join(working_dir, folder, f2))
-                    meta = src.meta
-                    # Update meta to float64
-                    meta.update(dtype = rasterio.float64)
                     with rasterio.open(os.path.join(output_dir, f2.replace('.tif', '_refl.tif')), 'w', **meta) as dst:
                         i = 0
 
