@@ -111,7 +111,7 @@ def main():
         for file in os.listdir(folder_dir):
             # if there isn't an atmospherically corrected image...
             if (file.endswith('rad.tif') and ('P1BS' not in file)
-                and file.replace('.tif', '_atmcorr.tif') not in refl_ready_files):
+                and file.endswith('atmcorr.tif') not in refl_ready_files):
                 # use the radiance image to convert it to reflectance...
                 refl_ready_files.append(file)
                 # and add 1 to the image count
