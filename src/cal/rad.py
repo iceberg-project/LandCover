@@ -129,7 +129,7 @@ def main():
                     meta.update({"driver": "GTiff",
                         "compress": "LZW",
                         "count": "8",
-                        "dtype": "float64",
+                        "dtype": "float32",
                         "bigtiff": "YES",
                         "nodata": 255})
 
@@ -144,8 +144,8 @@ def main():
                             rt = root[1][2].find(band)
                             print(type(rt))
                             # collect band metadata
-                            abscalfactor = float(rt.find('ABSCALFACTOR').text)
-                            effbandwidth = float(rt.find('EFFECTIVEBANDWIDTH').text)
+                            abscalfactor = np.float32(rt.find('ABSCALFACTOR').text)
+                            effbandwidth = np.float32(rt.find('EFFECTIVEBANDWIDTH').text)
 
                             # print(bands[i])
                             # print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
