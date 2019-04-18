@@ -16,6 +16,7 @@ atmospherically corrected image.
 
 import xml.etree.ElementTree as ET
 import rasterio
+import numpy as np
 import math
 import os
 import argparse
