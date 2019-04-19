@@ -112,7 +112,7 @@ def spec_mather(rad_dir, averages, folder_dir):
     meta = src.meta
 
     # Creates the specmath.tif image to be written onto
-    with rasterio.open(rad_dir.replace('.tif', '_specmath.tif'),
+    with rasterio.open(rad_dir.replace('.tif', '_atmcorr.tif'),
                        'w', **meta) as dst:
         # for bands 1 through 7...
         for i in range(7):
@@ -178,7 +178,7 @@ def main():
                 continue
         # Checks to see if the specmath.tif image exists
         specmath_file_exists = os.path.isfile(os.path.join(folder_dir,
-                                                           rad_file.replace('.tif', '_specmath.tif')))
+                                                           rad_file.replace('.tif', '_atmcorr.tif')))
 
         # If the specmath.tif image doesn't exist, create it
         if not specmath_file_exists:
