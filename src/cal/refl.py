@@ -172,7 +172,7 @@ def main():
                         # script. If it is needed, it can be commented back in -Brian
                         for band in bands:
                             ### Read each layer and write it to stack
-                            refl = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.sin(meansunel))
+                            refl = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.degrees(math.sin(meansunel)))
                             # print(refl[0,0],refl.dtype)
                             dst.write_band(i+1, refl)
                             i += 1
