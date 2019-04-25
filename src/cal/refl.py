@@ -20,10 +20,12 @@ import numpy as np
 import math
 import os
 import argparse
+import sys
 
 # Imports a dictionary containing the Earth-Sun distance in AU depending
 # on the date
-from earth_sun_dist import date_distance
+sys.path.insert(0, "./..")
+from lib.earth_sun_dist import date_distance
 
 def args_parser():
     """
@@ -172,7 +174,7 @@ def main():
                         # script. If it is needed, it can be commented back in -Brian
                         for band in bands:
                             ### Read each layer and write it to stack
-                            refl = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.degrees(math.sin(meansunel)))
+                            refl = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.sin(math.radians(meansunel)))
                             # print(refl[0,0],refl.dtype)
                             dst.write_band(i+1, refl)
                             i += 1
