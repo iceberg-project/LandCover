@@ -1,3 +1,4 @@
-landcover.py - prototype, replaced<br/>
-mk_rad.py - convert raw digital number tif input to top-of-atmosphere radiance<br/>
-mk_spec_ang.py - calculate spectral angles using TOA radiance input 
+the following scripts are used to calibrate raw WorldView-2 and -3 satellite image data into reflectance 
+
+rad.py - convert raw digital number tif input to top-of-atmosphere radiance<br>
+refl.py - convert either radiance tif input to top-of-atmosphere reflectance or atmospherically corrected radiance tif input  to atmospherically corrected reflectance
