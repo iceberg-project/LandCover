@@ -22,6 +22,7 @@ contain all of the folders containing the images.
 import argparse
 import os
 import rasterio
+import numpy as np
 
 def args_parser():
     """
@@ -117,9 +118,11 @@ def spec_mather(rad_dir, averages, folder_dir):
         # for bands 1 through 7...
         for i in range(7):
             # Calculate the band-mathed value
-            spec = src.read(i+1) - averages[i]
+            spec = np.float32(src.read(i+1) - averages[i])
             # and write it into the new image
-            dst.write(i+1, spec)
+            dst.write_band(i+1, spec)
+            
+        dst.write_band(8, np.float32(src.read(8)))
 
     # Close the file
     dst.close
