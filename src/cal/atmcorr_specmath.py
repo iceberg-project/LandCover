@@ -195,13 +195,16 @@ def main():
             # it to the new file
             spec_mather(rad_dir, averages, folder_dir)
 
-            print(rad_file + ' has been band-mathed!')
+            print(rad_file + ' has been processed!')
 
+        elif specmath_file_exists:
+            print(rad_file.replace('.tif', '_atmcorr.tif') + ' already exists!')
+            
         elif avg_txt == '':
             print('atmcorr_regr.py has not been run yet in the directory.')
 
         elif rad_file == '':
-            print('The radiance image does not exist in ' +
+            print('There are no radiance images in ' +
                   folder_dir + '!')
             
 if __name__ == '__main__':
