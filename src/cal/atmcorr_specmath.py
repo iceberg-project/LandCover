@@ -184,7 +184,7 @@ def main():
                                                            rad_file.replace('.tif', '_atmcorr.tif')))
 
         # If the specmath.tif image doesn't exist, create it
-        if not specmath_file_exists:
+        if not specmath_file_exists and avg_txt != '':
             # Saves the directory of the atmcorr_regr.py file
             atmotxt_dir = os.path.join(folder_dir, folder + '.txt')
             # Calls avgs_finder to retrieve the averages from the file
