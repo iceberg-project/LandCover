@@ -137,13 +137,6 @@ def main():
                 # If it wasn't processed...
                 if not refl_file_exists:
 
-                    # Finds the date of the image by looking at the folder name
-                    date = folder[2:7]
-
-                    # Finds the associated Earth-Sun distance in AU from the
-                    # imported dictionary
-                    d = date_distance[date]
-
                     tree=ET.parse(os.path.join(working_dir, folder, xml_file))
                     root = tree.getroot()
                     
@@ -159,8 +152,25 @@ def main():
                     # collect image metadata
                     bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
                     rt = root[1][2].find('IMAGE')
+
+                    # Finds the date the image was taken at
+                    tlctime = rt.find('TLCTIME').txt
+                    
                     satid = rt.find('SATID').text
                     meansunel = np.float32(rt.find('MEANSUNEL').text)
+
+                    # Used to find the month the image was taken in
+                    months = {'01':'JAN','02':'FEB','03':'MAR','04':'APR',
+                              '05':'MAY','06':'JUN','07':'JUL','08':'AUG',
+                              '09':'SEP','10':'OCT','11':'NOV','12':'DEC'
+                              }
+
+                    # Converts the date in the XML to the date format in date_distance
+                    date = months[tlctime[5:7]] + tlctime[8:10]
+
+                    # Finds the associated Earth-Sun distance in AU from the
+                    # imported dictionary
+                    dist = date_distance[date]
                     
                     if satid == 'WV02':
                         esun = [1758.2229,1974.2416,1856.4104,1738.4791,1559.4555,1342.0695,1069.7302,861.2866] # WV02
@@ -174,7 +184,7 @@ def main():
                         # script. If it is needed, it can be commented back in -Brian
                         for band in bands:
                             ### Read each layer and write it to stack
-                            refl = src.read(i+1)*math.pi*(d**2)/(esun[i]*math.sin(math.radians(meansunel)))
+                            refl = src.read(i+1)*math.pi*(dist**2)/(esun[i]*math.sin(math.radians(meansunel)))
                             # print(refl[0,0],refl.dtype)
                             dst.write_band(i+1, refl)
                             i += 1
