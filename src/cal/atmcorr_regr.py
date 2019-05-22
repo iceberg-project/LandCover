@@ -23,6 +23,8 @@ Version 1.2
 """
 
 # Imports the stats, argsparse, and os packages
+# The xml package is used to look into .xml files
+import xml.etree.ElementTree as ET
 from scipy import stats
 import argparse
 import os
@@ -393,6 +395,10 @@ def main():
         # Makes a temporary directory to the folder to work with the text files inside
         folder_dir = os.path.join(working_dir, folder)
 
+        # Holds the name of the .xml file related to the image. To be
+        # used in naming the output file
+        xml_file = ''
+
         # For each file in the current directory...
         for file in os.listdir(folder_dir):
             # If it is a .txt file and it contains the band data...
@@ -403,6 +409,8 @@ def main():
                 txt_count += 1
             # If it is a raw image file, NOT a radiance, atmospherically corrected, nor a
             # reflectance image...
+            elif file.endswith('.xml'):
+                xml_file = file
             else:
                 continue
         
@@ -414,9 +422,23 @@ def main():
         # to each file.
         total_intercept_arr = []
 
-        # Checks to see if a .txt file of the same name as a subfolder
-        # already exists. Outputs True or False
-        txt_file_exists = os.path.isfile(os.path.join(output_dir, folder + '.txt'))
+        # A placeholder name for the output file if there aren't any .xml files to
+        # look into for the name
+        file_name = 'NO_XML_PRESENT'
+
+        # If there is an xml file...
+        if xml_file != '':
+            # Look into the xml file for a branch called SOURCE IMAGE
+            tree = ET.parse(os.path.join(output_dir, xml_file))
+            root = tree.getroot()
+            rt = root[1].find('SOURCE_IMAGE').text
+
+            # And lop off some stuff for the file name
+            file_name = rt[5:19]
+
+        # Checks to see if a .txt file of the same name the output file
+        # exists. Outputs True or False
+        txt_file_exists = os.path.isfile(os.path.join(output_dir, file_name + '.txt'))
 
         # If the output file does NOT exist AND the .txt file count > 0...
         if not txt_file_exists and txt_count > 0:
@@ -446,14 +468,14 @@ def main():
                 set_check = dataset_checker(pass_fail_arr, pass_fail_stat_arr)
                 
                 # Calls the writer() function. Does most of the file writing.
-                writer(f, folder, output_dir, pass_fail_stat_arr, pass_fail_arr, \
+                writer(f, file_name, output_dir, pass_fail_stat_arr, pass_fail_arr, \
                        intercept_arr, set_check)
 
             # Outside of the loop. Calculates the avg intercepts
             # between all of the files
             band_avg_arr = avg_intercept(total_intercept_arr, txt_count)
             # Writes the avg intercepts into the document.
-            avg_writer(folder, output_dir, band_avg_arr)
+            avg_writer(file_name, output_dir, band_avg_arr)
             # Prints a message that the file was successfully created
             print(folder+'.txt was successfully created!')        
 
