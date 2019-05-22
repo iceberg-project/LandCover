@@ -154,7 +154,7 @@ def main():
                     rt = root[1][2].find('IMAGE')
 
                     # Finds the date the image was taken at
-                    tlctime = rt.find('TLCTIME').txt
+                    tlctime = rt.find('TLCTIME').text
                     
                     satid = rt.find('SATID').text
                     meansunel = np.float32(rt.find('MEANSUNEL').text)
