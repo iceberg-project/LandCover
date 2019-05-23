@@ -6,4 +6,15 @@ atmcorr_regr.py - uses .txt files of manually collected spectra from an image to
 
 atmcorr_specmath.py - uses the output file from atmcorr_regr.py to atmospherically correct radiance image. Output images end with rad_atmcorr.tif <br>
 
-refl.py - convert either radiance tif input to top-of-atmosphere reflectance or atmospherically corrected radiance tif input  to atmospherically corrected reflectance. Output images end with either rad_refl.tif or rad_atmcorr_refl.tif
+refl.py - convert either radiance tif input to top-of-atmosphere reflectance or atmospherically corrected radiance tif input  to atmospherically corrected reflectance. Output images end with either rad_refl.tif or rad_atmcorr_refl.tif <br>
+
+
+packages needed:
+- rasterio
+- xml.etree.ElementTree
+- argparse
+- os
+- numpy
+- math
+- sys
+- scipy stats
