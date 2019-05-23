@@ -8,8 +8,10 @@ atmcorr_specmath.py - uses the output file from atmcorr_regr.py to atmospherical
 
 refl.py - convert either radiance tif input to top-of-atmosphere reflectance or atmospherically corrected radiance tif input  to atmospherically corrected reflectance. Output images end with either rad_refl.tif or rad_atmcorr_refl.tif <br>
 
+Each script requires the same single argument, -ip (or --input_dir), for the input directory.<br>
+> python rad.py -ip /path/to/input/files
 
-packages needed:
+Additional packages needed:
 - rasterio
 - xml.etree.ElementTree
 - argparse
