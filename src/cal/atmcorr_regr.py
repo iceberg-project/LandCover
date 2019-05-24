@@ -8,7 +8,8 @@ This script is used to take in .txt files of atmospheric spectrographic data
 in subfolders in order to calculate the atmospheric correction values needed.
 
 The output files will automatically be sent into the same folder as the analyzed .txt
-files.
+files. The name of the output file will be NO_XML_PRESENT if there is no
+.xml file associated with the image band data to base the name off of.
 
 This script is safe to run multiple times in the same directory.
 
