@@ -19,6 +19,7 @@ The script should be called from console and the inputted directory should
 contain all of the folders containing the images.
 """
 
+import xml.etree.ElementTree as ET
 import argparse
 import os
 import rasterio
@@ -160,11 +161,34 @@ def main():
     for folder in folders:
         # Initialize variables to hold the atmcorr_regr.py output .txt and
         # the rad.tif image.
+        # xml_file saves the name of the .xml file associated with the raw image
         avg_txt = ''
         rad_file = ''
+        xml_file = ''
 
         # Saves the directory of the folder
         folder_dir = os.path.join(working_dir, folder)
+
+        # Looks for an xml file in the image folder
+        for file in os.listdir(folder_dir):
+            if file.endswith('.xml'):
+                xml_file = file
+
+        # Placeholder atmcorr_regr.py file output name if there was no
+        # xml file when it was run
+        file_name = 'NO_XML_PRESENT'
+
+        # If there is an xml file, then the atmcorr_regry.py file has
+        # a specific name, which was determined by the source image
+        # name in the xml
+        if xml_file != '':
+            # Look into the xml for a branch called SOURCE_IMAGE
+            tree = ET.parse(os.path.join(folder_dir, xml_file))
+            root = tree.getroot()
+            rt = root[1].find('SOURCE_IMAGE').text
+
+            # And lop off some stuff for the atmcorr_regr.py output name
+            file_name = rt[5:19]
 
         # For each file in the folder...
         for file in os.listdir(folder_dir):
@@ -174,7 +198,7 @@ def main():
                 rad_file = file
             # if the file is the output .txt from atmcorr_regr.py,
             # save it
-            elif file == folder + '.txt':
+            elif file == file_name + '.txt':
                 avg_txt = file
             # else continue
             else:
@@ -186,7 +210,7 @@ def main():
         # If the specmath.tif image doesn't exist, create it
         if not specmath_file_exists and avg_txt != '':
             # Saves the directory of the atmcorr_regr.py file
-            atmotxt_dir = os.path.join(folder_dir, folder + '.txt')
+            atmotxt_dir = os.path.join(folder_dir, file_name + '.txt')
             # Calls avgs_finder to retrieve the averages from the file
             averages = avgs_finder(atmotxt_dir)
             # Saves the directory of the rad.tif image
