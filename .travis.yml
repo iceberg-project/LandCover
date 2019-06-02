@@ -13,8 +13,8 @@ env:
     - DIFF=`git diff --name-only --diff-filter=b $OLD...$NEW`
     - DIFF=$(echo $DIFF | grep -o -e '\b[^ ]*.py\b')
 #    - CMD_PYTEST="c"
-    - CMD_FLAKE8="if [[ ! -z \"$DIFF\"]]; then flake8 --config=.flake8 $DIFF; fi"
-    - CMD_PYLINT="if [[ ! -z \"$DIFF\"]]; then pylint $DIFF; fi"
+    - CMD_FLAKE8="if ! test -z \"$DIFF\"; then flake8 --config=.flake8 $DIFF;else echo 'Nothing to pep8'; fi"
+    - CMD_PYLINT="if ! test -z \"$DIFF\"; then pylint $DIFF; else echo 'Nothing to lint'; fi"
     - COVERAGE=false
   matrix:
 #    - MAIN_CMD=$CMD_PYTEST COVERAGE=true
