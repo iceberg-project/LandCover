@@ -24,11 +24,11 @@ env:
   
 # command to install dependencies
 install:
-  - pip install .
-  - pip install coverage
+#  - pip install .
+#  - pip install coverage
   - pip install flake8
   - pip install pylint
-  - pip install codecov
+#  - pip install codecov
 
 before_script:
   - LOC=/home/travis/virtualenv/python2.7  # Location where VE is created on travis
