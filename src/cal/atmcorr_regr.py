@@ -132,9 +132,9 @@ def writer(file, file_name, output_dir, pass_fail_stat_arr,
     # for each tested band...
     for x in range(7):
         # ...write the relevant data
-        file_write.write('B' + str(x + 1) + ' TEST: ' + str(pass_fail_arr[x]) + \
+        file_write.write('B' + str(x + 1) + ' TEST: ' + str(pass_fail_arr[x]) +
                          ', ' + str(pass_fail_stat_arr[x]) + '\n')
-        file_write.write('B' + str(x + 1) + ' CORRECTION: ' + \
+        file_write.write('B' + str(x + 1) + ' CORRECTION: ' +
                          str(intercept_arr[x]) + '\n')
 
     # Writes the overall pass/fail status of the bands
@@ -202,7 +202,7 @@ def inter_slope(band_array):
         # Iterate into the slope and intercept lists using linregress. The other values are
         # useless for now.
         (slope_arr[band], intercept_arr[band], r_value, p_value, std_err) = \
-          stats.linregress(band_array[7], band_array[band])
+           stats.linregress(band_array[7], band_array[band])
         
     return intercept_arr, slope_arr
 
@@ -238,15 +238,16 @@ def tester(band_array, intercept_arr, slope_arr, n):
             element_check = 0
 
         # Doing the specified calculation for each element...
-        element_calc = ((element - ((slope_arr[n] * band_array[-1][element_n]) \
-                                  + (intercept_arr[n])))**2) * element_check
+        element_calc = ((element - ((slope_arr[n] * band_array[-1][element_n]) +
+                         (intercept_arr[n])))**2) * element_check
         # Adds the calculated number to the sum holder
         calc_sum += element_calc
 
     # Does the calculation to obtain the number to compare to 3.
-    pass_fail_num = calc_sum/len(band_array[n])
+    pass_fail_num = calc_sum / len(band_array[n])
     
     return pass_fail_num
+
 
 def pass_fail_checker(pass_fail_num):
     """
@@ -297,6 +298,7 @@ def dataset_checker(pass_fail_arr, pass_fail_stat_arr):
 # This block calculates averages
 # --------------------------------------------------------------------------
 
+
 def avg_intercept(total_intercept_arr, txt_count):
     """
     Calculates the AVERAGE ATMOSPHERIC CORRECTION for each band in a subfolder
@@ -312,7 +314,7 @@ def avg_intercept(total_intercept_arr, txt_count):
     # Initializes 7 variables to hold the sum of each of their respective band
     # intercepts
     (band1_sum, band2_sum, band3_sum, band4_sum, band5_sum, band6_sum, band7_sum) = \
-                0, 0, 0, 0, 0, 0, 0
+      0, 0, 0, 0, 0, 0, 0
     # For loop does the summing
     for i in range(len(total_intercept_arr)):
         band1_sum += total_intercept_arr[i][0]
@@ -356,8 +358,8 @@ def avg_writer(file_name, output_dir, band_avg_arr):
     file_write = open(os.path.join(output_dir, file_name + '.txt'), 'a+')
     file_write.write('ATMOSPHERIC CORRECTION AVG: \n')
     for x in range(7):
-        file_write.write('BAND' + str(x + 1) + ' AVG: '
-                         + str(band_avg_arr[x]) + '\n')
+        file_write.write('BAND' + str(x + 1) + ' AVG: ' +
+                         str(band_avg_arr[x]) + '\n')
     file_write.close()
 
 # --------------------------------------------------------------------------
@@ -470,7 +472,7 @@ def main():
                 # Passes the above the above three outputs into the test_caller() function
                 # to obtain the numbers to compare to 3 and the pass/fail statuses.
                 (pass_fail_stat_arr, pass_fail_arr) = \
-                   tester_caller(band_array, intercept_arr, slope_arr)
+                  tester_caller(band_array, intercept_arr, slope_arr)
                 # Checks the pass/fail statuses of each band. Will return 'Fail' if
                 # at least one 'Fail' exists.
                 set_check = dataset_checker(pass_fail_arr, pass_fail_stat_arr)
@@ -502,5 +504,7 @@ def main():
     print('All new files successfully created! Look in Output Files for the results.')
 
 # Runs the script if directly called
+
+
 if __name__ == '__main__':
     main()

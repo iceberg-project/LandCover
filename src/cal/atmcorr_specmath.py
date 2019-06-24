@@ -21,8 +21,8 @@ contain all of the folders containing the images.
 
 import os
 import argparse
-import numpy as np
 import xml.etree.ElementTree as ET
+import numpy as np
 import rasterio
 
 
@@ -235,5 +235,3 @@ def main():
             
 if __name__ == '__main__':
     main()
-
-
