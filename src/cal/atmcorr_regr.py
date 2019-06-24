@@ -25,10 +25,11 @@ Version 1.2
 
 # Imports the stats, argsparse, and os packages
 # The xml package is used to look into .xml files
+import os
+import argparse
 import xml.etree.ElementTree as ET
 from scipy import stats
-import argparse
-import os
+
 
 def args_parser():
     """
@@ -55,6 +56,7 @@ def args_parser():
 # This block reads and writes files
 # --------------------------------------------------------------------------
 
+
 def reader(file):
     """
     Reads ONE file passed into it.
@@ -74,7 +76,7 @@ def reader(file):
     # Opens the passed in file...
     with open(file, 'r') as file_read:
         # ...splits each integer into their own element in a list...
-        lines = [line.strip().replace('\n','').replace('   ', '  ').split('  ') for line in file_read]
+        lines = [line.strip().replace('\n', '').replace('   ', '  ').split('  ') for line in file_read]
         # ...and sets a new list to the 8 bands at the bottom of the .txt.
         band_lines = lines[-8:]
         
@@ -130,10 +132,10 @@ def writer(file, file_name, output_dir, pass_fail_stat_arr,
     # for each tested band...
     for x in range(7):
         # ...write the relevant data
-        file_write.write('B' + str(x+1) + ' TEST: ' + str(pass_fail_arr[x])
-                         + ', ' + str(pass_fail_stat_arr[x]) + '\n')
-        file_write.write('B' + str(x+1) + ' CORRECTION: '
-                         + str(intercept_arr[x]) + '\n')
+        file_write.write('B' + str(x + 1) + ' TEST: ' + str(pass_fail_arr[x]) + \
+                         ', ' + str(pass_fail_stat_arr[x]) + '\n')
+        file_write.write('B' + str(x + 1) + ' CORRECTION: ' + \
+                         str(intercept_arr[x]) + '\n')
 
     # Writes the overall pass/fail status of the bands
     file_write.write('OVERALL: ' + str(set_check) + '\n \n')
@@ -178,6 +180,7 @@ def tester_caller(band_array, intercept_arr, slope_arr):
         
     return pass_fail_stat_arr, pass_fail_arr
 
+
 def inter_slope(band_array):
     """
     Used to calculate the intercepts and slopes of each band vs the last band. Calls the other
@@ -199,9 +202,10 @@ def inter_slope(band_array):
         # Iterate into the slope and intercept lists using linregress. The other values are
         # useless for now.
         (slope_arr[band], intercept_arr[band], r_value, p_value, std_err) = \
-                          stats.linregress(band_array[7], band_array[band])
+          stats.linregress(band_array[7], band_array[band])
         
     return intercept_arr, slope_arr
+
 
 def tester(band_array, intercept_arr, slope_arr, n):
     """
@@ -329,11 +333,12 @@ def avg_intercept(total_intercept_arr, txt_count):
     band7_avg = band7_sum / txt_count
 
     # Puts the avg intercept data into an array.
-    band_avg_arr = [band1_avg, band2_avg, band3_avg, band4_avg, \
+    band_avg_arr = [band1_avg, band2_avg, band3_avg, band4_avg,
                     band5_avg, band6_avg, band7_avg]
     
     return band_avg_arr
 
+ 
 def avg_writer(file_name, output_dir, band_avg_arr):
     """
     Writes the avg intercept to the document at the end
@@ -351,11 +356,12 @@ def avg_writer(file_name, output_dir, band_avg_arr):
     file_write = open(os.path.join(output_dir, file_name + '.txt'), 'a+')
     file_write.write('ATMOSPHERIC CORRECTION AVG: \n')
     for x in range(7):
-        file_write.write('BAND' + str(x+1) + ' AVG: '
+        file_write.write('BAND' + str(x + 1) + ' AVG: '
                          + str(band_avg_arr[x]) + '\n')
     file_write.close()
 
 # --------------------------------------------------------------------------
+
 
 def main():
     """
@@ -391,7 +397,8 @@ def main():
         
         # List used to hold the names of all the .txt files in a folder.
         # Variable initialized to count the number of .txt files
-        txt_files = []; txt_count = 0
+        txt_files = []
+        txt_count = 0
 
         # Makes a temporary directory to the folder to work with the text files inside
         folder_dir = os.path.join(working_dir, folder)
@@ -463,13 +470,13 @@ def main():
                 # Passes the above the above three outputs into the test_caller() function
                 # to obtain the numbers to compare to 3 and the pass/fail statuses.
                 (pass_fail_stat_arr, pass_fail_arr) = \
-                                    tester_caller(band_array, intercept_arr, slope_arr)
+                   tester_caller(band_array, intercept_arr, slope_arr)
                 # Checks the pass/fail statuses of each band. Will return 'Fail' if
                 # at least one 'Fail' exists.
                 set_check = dataset_checker(pass_fail_arr, pass_fail_stat_arr)
                 
                 # Calls the writer() function. Does most of the file writing.
-                writer(f, file_name, output_dir, pass_fail_stat_arr, pass_fail_arr, \
+                writer(f, file_name, output_dir, pass_fail_stat_arr, pass_fail_arr,
                        intercept_arr, set_check)
 
             # Outside of the loop. Calculates the avg intercepts
@@ -478,12 +485,12 @@ def main():
             # Writes the avg intercepts into the document.
             avg_writer(file_name, output_dir, band_avg_arr)
             # Prints a message that the file was successfully created
-            print(folder+'.txt was successfully created!')        
+            print(folder + '.txt was successfully created!')        
 
         # If the file already exists...
         elif txt_file_exists:
             # Print that the .txt already exists
-            print(folder+'.txt already exists!')        
+            print(folder + '.txt already exists!')        
         # If the .txt count is 0...
         elif txt_count == 0:
             # Print that there are no .txt files to analyze

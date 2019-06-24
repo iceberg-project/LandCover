@@ -19,11 +19,12 @@ The script should be called from console and the inputted directory should
 contain all of the folders containing the images.
 """
 
-import xml.etree.ElementTree as ET
-import argparse
 import os
-import rasterio
+import argparse
 import numpy as np
+import xml.etree.ElementTree as ET
+import rasterio
+
 
 def args_parser():
     """
@@ -71,7 +72,7 @@ def avgs_finder(atmotxt_dir):
         # Stores each line as its own list inside a larger list
         # Splitting is done due to the formatting in the file
         text = [line.strip().replace("\n", "").split(": ")
-                    for line in atmo_txt]
+                for line in atmo_txt]
     # Closes the file
     atmo_txt.close()
 
@@ -119,9 +120,9 @@ def spec_mather(rad_dir, averages, folder_dir):
         # for bands 1 through 7...
         for i in range(7):
             # Calculate the band-mathed value
-            spec = np.float32(src.read(i+1) - averages[i])
+            spec = np.float32(src.read(i + 1) - averages[i])
             # and write it into the new image
-            dst.write_band(i+1, spec)
+            dst.write_band(i + 1, spec)
             
         dst.write_band(8, np.float32(src.read(8)))
 
@@ -230,6 +231,9 @@ def main():
         elif rad_file == '':
             print('There are no radiance images in ' +
                   folder_dir + '!')
+
             
 if __name__ == '__main__':
     main()
+
+
