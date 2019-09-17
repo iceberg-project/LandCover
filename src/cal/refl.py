@@ -22,12 +22,12 @@ import sys
 import numpy as np
 import rasterio
 
-from lib.earth_sun_dist import date_distance
-
-# Imports a dictionary containing the Earth-Sun distance in AU depending
-# on the date
+# Includes the parent directory in the paths able to be imported from
 sys.path.insert(0, "./..")
 
+# Imports a dictionary containing the Earth-Sun distance in AU depending
+# on the date.
+from lib.earth_sun_dist import date_distance
 
 def args_parser():
     """
@@ -53,7 +53,6 @@ def args_parser():
 
     # Returns the directory
     return parser.parse_args().input_dir
-
 
 def main():
     """
@@ -146,7 +145,7 @@ def main():
 
                 # If it wasn't processed...
                 if not refl_file_exists:
-
+                    
                     tree = ET.parse(os.path.join(working_dir, folder, xml_file))
                     root = tree.getroot()
                     
