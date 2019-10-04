@@ -124,6 +124,20 @@ def main():
 
                     src = rasterio.open(os.path.join(folder_dir, f))
                     meta = src.meta
+                    rt = root[1][2].find('IMAGE')
+                    satid = rt.find('SATID').text
+                    
+                    # gain correction values
+                    if satid == 'WV02':
+                        gain = [1.151,0.988,0.936,0.949,0.952,0.974,0.961,1.002] # WV02
+                    if satid == 'WV03':
+                        gain = [0.905,0.940,0.938,0.962,0.964,1.000,0.961,0.978] # WV03
+                    
+                    #offset correction values
+                    if satid == 'WV02':
+                        offset = [-7.478,-5.736,-3.546,-3.564,-2.512,-4.120,-3.300,-2.891] # WV02
+                    if satid == 'WV03':
+                        offset = [-8.604,-5.809,-4.996,-3.649,-3.021,-4.521,-5.522,-2.992] # WV03
                     
                     # Update meta to float64
                     meta.update({"driver": "GTiff",
@@ -151,7 +165,7 @@ def main():
                             # print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
 
                             ### Read each layer and write it to stack
-                            rad = src.read(i + 1)*abscalfactor/effbandwidth
+                            rad = np.float32(gain[i])*src.read(i + 1)*(abscalfactor/effbandwidth)+np.float32(offset[i])
                             #print(rad[0,0],rad.dtype)
                             dst.write_band(i + 1, rad)
                             i += 1
