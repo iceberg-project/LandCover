@@ -23,7 +23,7 @@ import numpy as np
 import rasterio
 
 # Includes the parent directory in the paths able to be imported from
-sys.path.insert(0, "./..")
+sys.path.insert(1, "./..")
 
 # Imports a dictionary containing the Earth-Sun distance in AU depending
 # on the date.
@@ -227,7 +227,6 @@ def main():
         else:
             continue
     
-
 # If the script was directly called, start it
 if __name__ == '__main__':
     main()
