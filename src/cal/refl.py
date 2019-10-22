@@ -7,8 +7,7 @@ Copyright: 2018-2019
 This script is a more generalized version of Brad Spitzbart's reflectance
 script. It searches through the folders in the console specified directory for
 atmospherically corrected .tif images and their corresponding .xml files.
-If no .tif or .xml files exist in a folder, the script will not run
-for that folder and will continue to the next folder.
+If no .tif or .xml files exist in a folder, the script will not run.
 
 The reflectance image will be outputted in the same folder as the
 atmospherically corrected image.
@@ -71,8 +70,18 @@ def main():
     working_dir = args_parser()
 
     # Empty list holds all of the relevent folders in the directory
-    folders = []
+    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
+    # This makes it so the script searches for just images within
+    # the inputted directory
+    folders = [working_dir]
 
+    """
+
+    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    #folders = [working_dir] to folders = []
+    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    #DIRECTORY
+    
     # for each file/folder in the directory...
     for file in os.listdir(working_dir):
         # if there is a . or the something is named Output Files...
@@ -82,6 +91,7 @@ def main():
         else:
             # Else, append the thing being looked at into the folders list
             folders.append(file)
+    """
 
     # for each folder in the specified directory...
     for folder in folders:

@@ -16,7 +16,7 @@ The spectral-mathed image will be outputted in the same folder as the
 radiance image.
 
 The script should be called from console and the inputted directory should
-contain all of the folders containing the images.
+contain the images, relevent .xml, etc that need to be processed
 """
 
 import os
@@ -146,8 +146,18 @@ def main():
 
     # Initializes an empty list to hold all of the relevant folders
     # in the specified directory
-    folders = []
+    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
+    # This makes it so the script searches for just images within
+    # the inputted directory
+    folders = [working_dir]
 
+    """
+
+    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    #folders = [working_dir] to folders = []
+    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    #DIRECTORY
+    
     # for each file in the specified directory...
     for file in os.listdir(working_dir):
         # if the file is NOT a folder
@@ -157,6 +167,7 @@ def main():
         else:
             # append it to the folders list
             folders.append(file)
+    """
 
     # for each folder in the folders list...
     for folder in folders:

@@ -5,9 +5,9 @@ License: Stony Brook University, Northern Arizona University
 Copyright: 2018-2019
 
 This script is a more generalized version of Brad Spitzbart's raw to radiance script.
-It searches through the folders in the console specified directory for raw .tif images and their
-corresponding .xml files. If no .tif or .xml files exist in a folder, the script will not run
-for that folder and will continue to the next folder.
+It searches through the console specified directory for raw .tif images and their
+corresponding .xml files. If no .tif or .xml files exist in a folder,
+the script will not run.
 
 The radiance image will be outputted in the same folder as the original raw image.
 """
@@ -62,8 +62,18 @@ def main():
 
     # Initializes an empty list to hold all of the relevant folders
     # containing images
-    folders = []
+    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
+    # This makes it so the script searches for just images within
+    # the inputted directory
+    folders = [working_dir]
 
+    """
+
+    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    #folders = [working_dir] to folders = []
+    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    #DIRECTORY
+    
     # for each file/folder in the specified directory...
     for file in os.listdir(working_dir):
         # if there is a . or the file is named Output Files...
@@ -73,6 +83,7 @@ def main():
         # else, append the file to the folders list
         else:
             folders.append(file)
+    """
 
     # for each folder in the folders list...
     for folder in folders:

@@ -13,14 +13,11 @@ files. The name of the output file will be NO_XML_PRESENT if there is no
 
 This script is safe to run multiple times in the same directory.
 
-Change(s) from version 1.1 of atmcorr_regr.py:
-- Set the output directory to the folder directory instead for more consistency
-  with the layout of each image folder.
-- Removed the radiance script and put it into its own script to compartmentalize
-  the script's purpose.
-- Takes in the directory from console input rather than through Python
+Change(s) from version 1.2 of atmcorr_regr.py:
+- The input directory should now be the folder with the text file directly
+  inside of it
 
-Version 1.2
+Version 1.3
 """
 
 # Imports the stats, argsparse, and os packages
@@ -381,8 +378,18 @@ def main():
     working_dir = args_parser()
 
     # Empty list holds all of the relevent folders in the directory
-    folders = []
+    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
+    # This makes it so the script searches for just images within
+    # the inputted directory
+    folders = [working_dir]
 
+    """
+
+    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    #folders = [working_dir] to folders = []
+    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    #DIRECTORY
+    
     # for each file/folder in the directory...
     for file in os.listdir(working_dir):
         # if there is a . or the something is named Output Files...
@@ -392,6 +399,7 @@ def main():
         else:
             # Else, append the thing being looked at into the folders list
             folders.append(file)
+    """
 
 
     # for every single folder in the folders list...
