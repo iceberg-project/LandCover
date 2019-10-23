@@ -9,4 +9,9 @@ It searches through the console specified directory for refl.tif images. If no r
 The output will be additional band layers with boolians for each defined land cover class defined by a specific condition.
 """
 
-import numpy
+# Imports the necessary packages. Rasterio is used to access the band data in .tif files
+import rasterio
+import numpy as np
+import math
+import os
+import argparse
