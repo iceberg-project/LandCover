@@ -1,1 +1,12 @@
 
+"""
+Authors: Helen Eifert, Brad Spitzbart, Brian Szutu
+Emails: he248@nau.edu, bradley.spitzbart@stonybrook.edu, bs886@nau.edu
+License: Stony Brook University, Northern Arizona University
+Copyright: 2018-2019
+This script runs a set of band math parameters to identify land cover types.
+It searches through the console specified directory for refl.tif images. If no refl.tif images exist, the script will not run.
+The output will be additional band layers with boolians for each defined land cover class defined by a specific condition.
+"""
+
+import numpy
