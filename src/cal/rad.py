@@ -95,8 +95,20 @@ def main():
         # Initialize a varaible to count the number of .tif files
         tif_files = []; tif_count = 0
 
-        # Specifies the directory of the specific folder
+        """
+
+        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        #folder_dir = working_dir
+        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        #DIRECTORY
+        
+        # Saves the directory of the folder
         folder_dir = os.path.join(working_dir, folder)
+        """
+
+        # The previous version of the script's subfolder IS this current
+        # version's working folder.
+        folder_dir = working_dir
 
         # for each file inside of the folder...
         for file in os.listdir(folder_dir):

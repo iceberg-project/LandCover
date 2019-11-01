@@ -105,8 +105,20 @@ def main():
         refl_ready_files = []
         refl_ready_count = 0
 
+        """
+        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        #folder_dir = working_dir
+        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        #DIRECTORY
+    
         # Stores the subfolder directory
         folder_dir = os.path.join(working_dir, folder)
+
+        """
+
+        # The previous version of the script's subfolder IS this current
+        # version's working folder.
+        folder_dir = working_dir
 
         # for each file in the subfolder...
         for file in os.listdir(folder_dir):

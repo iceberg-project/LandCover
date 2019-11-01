@@ -410,8 +410,20 @@ def main():
         txt_files = []
         txt_count = 0
 
-        # Makes a temporary directory to the folder to work with the text files inside
+        """
+
+        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        #folder_dir = working_dir
+        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        #DIRECTORY
+        
+        # Saves the directory of the folder
         folder_dir = os.path.join(working_dir, folder)
+        """
+
+        # The previous version of the script's subfolder IS this current
+        # version's working folder.
+        folder_dir = working_dir
 
         # Holds the name of the .xml file related to the image. To be
         # used in naming the output file
