@@ -148,7 +148,7 @@ def main():
                     ## also not sure if it is the right format
                     # set parameters with numpy where function
                     snow_and_ice = np.where(sum >= 3)
-                    geology = np.where(1 <= sum >= 3)
+                    geology = np.where(1 < sum > 3)
                     shadow_and_water = np.where(sum <= 1)
                     
                     ## i imagine there is one more step to write these 
