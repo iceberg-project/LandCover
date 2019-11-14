@@ -126,19 +126,19 @@ def main():
                              'BAND_RE', 'BAND_N', 'BAND_N2']
                     rt = root[1][2].find('IMAGE')
 
-                    with rasterio.open(os.path.join(output_dir,
+                    i = 0
+                    sum = 0
+
+                    for _ in bands:
+                        # Read each layer and write it to stack
+                        sum = sum + src.read(i + 1) 
+                        # print(refl[0,0],sum.dtype)
+                        i += 1
+
+                    dst = rasterio.open(os.path.join(output_dir,
                                        f2.replace('.tif', '_class.tif')),
-                                       'w', **meta) as dst:
-                        i = 0
-                        sum = 0
-
-                        for _ in bands:
-                            # Read each layer and write it to stack
-                            sum = sum + src.read(i + 1) 
-                            # print(refl[0,0],sum.dtype)
-                            dst.write_band(i + 1, sum)
-                            i += 1
-
+                                       'w', **meta)
+                    dst.write(sum)
                     dst.close()
                     # Prints that this specific parameter has been run
                     print(f2 + ' has been processed.')
