@@ -132,7 +132,7 @@ def main():
                     for _ in bands:
                         # Read each layer and write it to stack
                         sum = sum + src.read(i + 1) 
-                        # print(refl[0,0],sum.dtype)
+                        # print(sum[0,0],sum.dtype)
                         i += 1
 
                     dst = rasterio.open(os.path.join(output_dir,
@@ -143,18 +143,20 @@ def main():
                     # Prints that this specific parameter has been run
                     print(f2 + ' has been processed.')
                     
-                    ## not sure if this is in the right spot or if it needs
-                    ## to be within the for loop
-                    ## also not sure if it is the right format
-                    # set parameters with numpy where function
-                    snow_and_ice = np.where(sum >= 3)
-                    geology = np.where(1 < sum > 3)
-                    shadow_and_water = np.where(sum <= 1)
+                    # Classification of pixels by passing a condition
+                    # over the sum array and outputs a new array with
+                    # 1 values where true and 0 values where false
+                    snow_and_ice = np.where(sum >= 3, 1, 0)
+                    print(snow_and_ice)
+
+                    shadow_and_water = np.where(sum <= 1, 1, 0)
+                    print(shadow_and_water)
                     
-                    ## i imagine there is one more step to write these 
-                    ## arrays into a new image, but i'm unsure how to 
-                    ## best assign new values without canceling their
-                    ## existing values
+                    geology = np.where(sum > 1 and sum < 3, 1, 0)
+                    print(geology)
+                    ## Not sure where to go from here, but the next 
+                    ## step should be converting these arrays into 
+                    ## shape files
           
                 # If the class.tif file already exists, print out a message
                 # saying so
