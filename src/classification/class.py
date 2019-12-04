@@ -15,6 +15,8 @@ import numpy as np
 import math
 import os
 import argparse
+import cv2
+from shapely.geometry import Polygon, LineString, Point
 
 def args_parser():
     """
@@ -157,7 +159,7 @@ def main():
                     ## Not sure where to go from here, but the next 
                     ## step should be converting these arrays into 
                     ## shape files
-          
+                    
                 # If the class.tif file already exists, print out a message
                 # saying so
                 elif class_file_exists:
