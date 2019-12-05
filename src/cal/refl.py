@@ -22,11 +22,11 @@ import numpy as np
 import rasterio
 
 # Includes the parent directory in the paths able to be imported from
-sys.path.insert(1, "./..")
+sys.path.insert(0, "./..")
 
 # Imports a dictionary containing the Earth-Sun distance in AU depending
 # on the date.
-from earth_sun_dist import date_distance
+from lib.earth_sun_dist import date_distance
 
 def args_parser():
     """
