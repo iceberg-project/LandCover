@@ -26,7 +26,7 @@ sys.path.insert(1, "./..")
 
 # Imports a dictionary containing the Earth-Sun distance in AU depending
 # on the date.
-from lib.earth_sun_dist import date_distance
+from earth_sun_dist import date_distance
 
 def args_parser():
     """
