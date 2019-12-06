@@ -15,6 +15,8 @@ import numpy as np
 import math
 import os
 import argparse
+import xml.etree.ElementTree as ET
+import geopandas as gpd
 import cv2
 from shapely.geometry import Polygon, LineString, Point
 
@@ -41,6 +43,31 @@ def args_parser():
     # Returns the directory
     return parser.parse_args().input_dir
 
+
+
+def polygonize_raster(mask, transforms):
+    """Helper function to create polygons from binary masks
+    
+    Arguments:
+        mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
+        transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
+    
+    Returns:
+        list([shapely.Polygon]) -- List of polygons in mask. 
+    """
+    # write mask to polygon
+    polygons = []
+    edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
+    for edge in edges:
+        pol = Polygon([transforms * ele[0] for ele in edge])
+        polygons.append(pol)
+
+    if len(polygons) > 0:
+        return polygonize_raster
+    else:
+        return False
+
+
 def main():
     """
     Main function. Searches all of the folders within the specified directory 
@@ -59,10 +86,10 @@ def main():
     # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
     # This makes it so the script searches for just images within
     # the inputted directory
-    folder = [working_dir]
+    folders = [working_dir]
     
      # for each folder in the specified directory...
-    for file in folder:
+    for folder in folders:
         # Initialize a variable to save the name of the .xml file.
         # Initialize a variable to count the number of .xml files.
         xml_file = ''
@@ -74,7 +101,8 @@ def main():
         class_ready_count = 0
 
         # Stores the subfolder directory
-        folder_dir = os.path.join(working_dir, folder)
+        # folder_dir = os.path.join(working_dir, folder)
+        folder_dir = folder
 
         # for each file in the subfolder...
         for file in os.listdir(folder_dir):
@@ -111,10 +139,11 @@ def main():
                 # If it wasn't processed...
                 if not class_file_exists:
                     
-                    tree = ET.parse(os.path.join(working_dir, folder, xml_file))
+                    tree = ET.parse(os.path.join(folder, xml_file))
                     root = tree.getroot()
                     
-                    src = rasterio.open(os.path.join(working_dir, folder, f2))
+                    src = rasterio.open(os.path.join(folder, f2))
+                    # print(src.size)
                     meta = src.meta
                     # Update meta to float64
                     meta.update({"driver": "GTiff",
@@ -129,18 +158,20 @@ def main():
                     rt = root[1][2].find('IMAGE')
 
                     i = 0
-                    sum = 0
+                    sum_bands = np.zeros((src.height,src.width))
 
                     for _ in bands:
                         # Read each layer and write it to stack
-                        sum = sum + src.read(i + 1) 
+                        sum_bands = sum_bands + src.read(i + 1) 
                         # print(sum[0,0],sum.dtype)
                         i += 1
 
                     dst = rasterio.open(os.path.join(output_dir,
                                        f2.replace('.tif', '_class.tif')),
                                        'w', **meta)
-                    dst.write(sum)
+                    # dmeta = dst.meta
+                    dst.meta.update({"count": "1"})
+                    dst.write(sum_bands)
                     dst.close()
                     # Prints that this specific parameter has been run
                     print(f2 + ' has been processed.')
@@ -148,17 +179,28 @@ def main():
                     # Classification of pixels by passing a condition
                     # over the sum array and outputs a new array with
                     # 1 values where true and 0 values where false
-                    snow_and_ice = np.where(sum >= 3, 1, 0)
+                    snow_and_ice = np.where(sum_bands >= 3, 1, 0)
                     print(snow_and_ice)
 
-                    shadow_and_water = np.where(sum <= 1, 1, 0)
+                    shadow_and_water = np.where(sum_bands <= 1, 1, 0)
                     print(shadow_and_water)
                     
-                    geology = np.where(sum > 1 and sum < 3, 1, 0)
+                    geology = np.where(sum_bands > 1 and sum_bands< 3, 1, 0)
                     print(geology)
-                    ## Not sure where to go from here, but the next 
-                    ## step should be converting these arrays into 
-                    ## shape files
+                    
+                    # Converting arrays to shapefiles
+                    classied_df = gpd.GeoDataFrame(crs=src.crs)
+                    labels = ['snow_and_ice', 'shadow_and_water', 'geology']
+                    for idx, mask in enumerate([snow_and_ice, shadow_and_water, geology]):
+                        pols = polygonize_raster(mask, src.transform)
+                        if pols:
+                            classified_df = classied_df.append({'geometry': pols,
+                                                                'label': labels[idx]}, 
+                                                                ignore_index=True)
+                    
+                    classified_df.to_file('classified.shp')
+
+
                     
                 # If the class.tif file already exists, print out a message
                 # saying so
@@ -169,7 +211,7 @@ def main():
             print('There are no .xml files in ' + folder + '!')
         # If there are no raw .tif files to be analyzed, print out a message
         # saying so
-        elif refl_ready_count == 0:
+        elif class_ready_count == 0:
             print('There are no corrected .tif images in ' + folder + '!')
         else:
             continue
