@@ -147,7 +147,7 @@ def main():
                     meta = src.meta
                     # Update meta to float64
                     meta.update({"driver": "GTiff",
-                                 "count": "8",
+                                 "count": 1,
                                  "dtype": "float32",
                                  "bigtiff": "YES",
                                  "nodata": 255})
@@ -158,19 +158,18 @@ def main():
                     rt = root[1][2].find('IMAGE')
 
                     i = 0
-                    sum_bands = np.zeros((src.height,src.width))
+                    sum_bands = np.zeros((1,src.height,src.width),dtype=np.float32)
 
                     for _ in bands:
                         # Read each layer and write it to stack
                         sum_bands = sum_bands + src.read(i + 1) 
-                        # print(sum[0,0],sum.dtype)
                         i += 1
 
                     dst = rasterio.open(os.path.join(output_dir,
                                        f2.replace('.tif', '_class.tif')),
                                        'w', **meta)
                     # dmeta = dst.meta
-                    dst.meta.update({"count": "1"})
+                    #dst.meta.update({"count": "1"})
                     dst.write(sum_bands)
                     dst.close()
                     # Prints that this specific parameter has been run
