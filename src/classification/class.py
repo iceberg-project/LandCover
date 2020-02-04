@@ -178,13 +178,14 @@ def main():
                     # Classification of pixels by passing a condition
                     # over the sum array and outputs a new array with
                     # 1 values where true and 0 values where false
-                    snow_and_ice = np.where(sum_bands >= 3, 1, 0)
+                    snow_and_ice = np.where(sum_bands[0,:,:] >= 3, 1, 0)
                     print(snow_and_ice)
 
-                    shadow_and_water = np.where(sum_bands <= 1, 1, 0)
+                    shadow_and_water = np.where(sum_bands[0,:,:] <= 1, 1, 0)
                     print(shadow_and_water)
                     
-                    geology = np.where(sum_bands > 1 and sum_bands< 3, 1, 0)
+                    geology = np.where((sum_bands > 1) & (sum_bands < 3), 1, 0)
+                    #or, geology = np.where((snow_and_ice == 0) & (shadow_and_water == 0), 1, 0)
                     print(geology)
                     
                     # Converting arrays to shapefiles
