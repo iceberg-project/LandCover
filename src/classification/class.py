@@ -16,9 +16,8 @@ import math
 import os
 import argparse
 import xml.etree.ElementTree as ET
-import geopandas as gpd
 import cv2
-from shapely.geometry import Polygon, LineString, Point
+from shapely.geometry import Polygon, LineString, Point 
 
 def args_parser():
     """
@@ -71,8 +70,8 @@ def polygonize_raster(mask, transforms):
 def main():
     """
     Main function. Searches all of the folders within the specified directory 
-    for atmospherically corrected .tif images and their associated .xml files.
-    Calls args_parser to see what directory was specified.
+    for atmospherically corrected reflectance .tif images and their associated 
+    .xml files. Calls args_parser to see what directory was specified.
     Parameters:
     None
     Return:
@@ -179,33 +178,31 @@ def main():
                     # over the sum array and outputs a new array with
                     # 1 values where true and 0 values where false
                     snow_and_ice = np.where(sum_bands[0,:,:] >= 3, 1, 0)
-                    print(snow_and_ice)
+                    #print(snow_and_ice)
+                    dst = rasterio.open(os.path.join(output_dir,
+                                                     f2.replace('.tif', '_snow.tif')),
+                                                     'w', **meta)
+                    dst.write(snow_and_ice)
+                    dst.close()
 
                     shadow_and_water = np.where(sum_bands[0,:,:] <= 1, 1, 0)
-                    print(shadow_and_water)
+                    #print(shadow_and_water)
+                    dst = rasterio.open(os.path.join(output_dir,
+                                                     f2.replace('.tif', '_dark.tif')),
+                                                     'w', **meta)
+                    dst.write(shadow_and_water)
+                    dst.close()
                     
                     geology = np.where((sum_bands > 1) & (sum_bands < 3), 1, 0)
                     #or, geology = np.where((snow_and_ice == 0) & (shadow_and_water == 0), 1, 0)
-                    print(geology)
-                    
-                    # Converting arrays to shapefiles
-                    classied_df = gpd.GeoDataFrame(crs=src.crs)
-                    labels = ['snow_and_ice', 'shadow_and_water', 'geology']
-                    for idx, mask in enumerate([snow_and_ice, shadow_and_water, geology]):
-                        pols = polygonize_raster(mask, src.transform)
-                        if pols:
-                            classified_df = classied_df.append({'geometry': pols,
-                                                                'label': labels[idx]}, 
-                                                                ignore_index=True)
-                    
-                    classified_df.to_file('classified.shp')
+                    #print(geology)
+                    dst = rasterio.open(os.path.join(output_dir,
+                                                     f2.replace('.tif', '_geology.tif')),
+                                                     'w', **meta)
+                    dst.write(geology)
+                    dst.close()
 
 
-                    
-                # If the class.tif file already exists, print out a message
-                # saying so
-                elif class_file_exists:
-                    print(f2.replace('.tif', '_class.tif') + ' already exists!')
         # If there are no .xml files, print out a message saying so
         elif xml_count == 0:
             print('There are no .xml files in ' + folder + '!')
