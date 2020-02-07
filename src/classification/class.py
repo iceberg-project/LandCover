@@ -165,7 +165,7 @@ def main():
                         i += 1
 
                     dst = rasterio.open(os.path.join(output_dir,
-                                       f2.replace('.tif', '_class.tif')),
+                                       f2.replace('.tif', '_sumbands.tif')),
                                        'w', **meta)
                     # dmeta = dst.meta
                     #dst.meta.update({"count": "1"})
@@ -180,7 +180,7 @@ def main():
                     snow_and_ice = np.where(sum_bands[0,:,:] >= 3, 1, 0)
                     #print(snow_and_ice)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_snow.tif')),
+                                                     f2.replace('.tif', '_class_snow.tif')),
                                                      'w', **meta)
                     dst.write(snow_and_ice)
                     dst.close()
@@ -188,7 +188,7 @@ def main():
                     shadow_and_water = np.where(sum_bands[0,:,:] <= 1, 1, 0)
                     #print(shadow_and_water)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_dark.tif')),
+                                                     f2.replace('.tif', '_class_water.tif')),
                                                      'w', **meta)
                     dst.write(shadow_and_water)
                     dst.close()
@@ -197,7 +197,7 @@ def main():
                     #or, geology = np.where((snow_and_ice == 0) & (shadow_and_water == 0), 1, 0)
                     #print(geology)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_geology.tif')),
+                                                     f2.replace('.tif', '_class_geology.tif')),
                                                      'w', **meta)
                     dst.write(geology)
                     dst.close()
