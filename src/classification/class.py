@@ -177,7 +177,8 @@ def main():
                     # Classification of pixels by passing a condition
                     # over the sum array and outputs a new array with
                     # 1 values where true and 0 values where false
-                    snow_and_ice = np.where(sum_bands[0,:,:] >= 3, 1, 0)
+                    meta.update({"dtype": "int32"})
+                    snow_and_ice = np.int32(np.where(sum_bands >= 3, 1, 0))
                     #print(snow_and_ice)
                     dst = rasterio.open(os.path.join(output_dir,
                                                      f2.replace('.tif', '_class_snow.tif')),
@@ -185,7 +186,7 @@ def main():
                     dst.write(snow_and_ice)
                     dst.close()
 
-                    shadow_and_water = np.where(sum_bands[0,:,:] <= 1, 1, 0)
+                    shadow_and_water = np.int32(np.where(sum_bands <= 1, 1, 0))
                     #print(shadow_and_water)
                     dst = rasterio.open(os.path.join(output_dir,
                                                      f2.replace('.tif', '_class_water.tif')),
@@ -193,8 +194,9 @@ def main():
                     dst.write(shadow_and_water)
                     dst.close()
                     
-                    geology = np.where((sum_bands > 1) & (sum_bands < 3), 1, 0)
+                    geology = np.int32(np.where((sum_bands > 1) & (sum_bands < 3), 1, 0))
                     #or, geology = np.where((snow_and_ice == 0) & (shadow_and_water == 0), 1, 0)
+
                     #print(geology)
                     dst = rasterio.open(os.path.join(output_dir,
                                                      f2.replace('.tif', '_class_geology.tif')),
