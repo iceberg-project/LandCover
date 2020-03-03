@@ -101,7 +101,7 @@ def main():
                                                              '_shp.tif'))) 
                 
                  # If it wasn't processed...
-                if not class_file_exists:
+                if not shp_file_exists:
                     
                     src = rasterio.open(os.path.join(folder, f2))
                     # print(src.size)
