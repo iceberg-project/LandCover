@@ -165,7 +165,7 @@ def main():
                         i += 1
 
                     dst = rasterio.open(os.path.join(output_dir,
-                                       f2.replace('.tif', '_sumbands.tif')),
+                                       f2.replace('.tif', '_class.tif')),
                                        'w', **meta)
                     # dmeta = dst.meta
                     #dst.meta.update({"count": "1"})
@@ -181,7 +181,7 @@ def main():
                     snow_and_ice = np.int32(np.where(sum_bands >= 3, 1, 0))
                     #print(snow_and_ice)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_class_snow.tif')),
+                                                     f2.replace('.tif', '_snow.tif')),
                                                      'w', **meta)
                     dst.write(snow_and_ice)
                     dst.close()
@@ -189,7 +189,7 @@ def main():
                     shadow_and_water = np.int32(np.where(sum_bands <= 1, 1, 0))
                     #print(shadow_and_water)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_class_water.tif')),
+                                                     f2.replace('.tif', '_dark.tif')),
                                                      'w', **meta)
                     dst.write(shadow_and_water)
                     dst.close()
@@ -199,7 +199,7 @@ def main():
 
                     #print(geology)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_class_geology.tif')),
+                                                     f2.replace('.tif', '_geology.tif')),
                                                      'w', **meta)
                     dst.write(geology)
                     dst.close()
