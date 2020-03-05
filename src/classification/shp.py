@@ -16,6 +16,7 @@ import argparse
 import xml.etree.ElementTree as ET
 import geopandas as gpd
 import cv2
+import re
 from shapely.geometry import Polygon, LineString, Point 
 
 def args_parser():
@@ -75,7 +76,7 @@ def main():
 
         # for each file in the subfolder...
         for file in os.listdir(folder_dir):
-            if file.rindex('class') and ('P1BS' not in file):
+            if (('class' in file) and ('P1BS' not in file)):
                 # append it to the list of corrected images...
                 shp_ready_files.append(file)
                 # and add 1 to the image count
@@ -100,7 +101,13 @@ def main():
                 
                  # If it wasn't processed...
                 if not shp_file_exists:
-                    
+                    outfile = os.path.join(output_dir, f2.replace('.tif', '.shp')) 
+                    label_search = re.search('class_(.*)\.shp', outfile, re.IGNORECASE)
+
+                    if label_search:
+                        label = label_search.group(1)
+                    #print(outfile)
+                    #print(label)
                     src = rasterio.open(os.path.join(folder, f2))
                     # print(src.size)
                     meta = src.meta
@@ -114,14 +121,13 @@ def main():
     
                     # Converting arrays to shapefiles
                     polygon_df = gpd.GeoDataFrame(crs=src.crs)
-                    labels = ['snow_and_ice', 'shadow_and_water', 'geology']
                     for idx, mask in (polygon_df):
                         pols = polygonize_raster(mask, src.transform)
                         if pols:
                             polygon_df = polygon_df.append({'geometry': pols,
-                                                            'label': labels[idx]}, 
+                                                            'label': label}, 
                                                              ignore_index=True)
-                    polygon_df.to_file('.shp')
+                    polygon_df.to_file(outfile)
                     # Prints that parameter has been converted
                     print(f2 + ' has been processed.')
        
