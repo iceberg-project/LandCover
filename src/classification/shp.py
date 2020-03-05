@@ -11,8 +11,6 @@ script and converts them into shapefiles for mapping needs.
 
 # Imports the necessary packages. Rasterio is used to access the band data in .tif files
 import rasterio
-import numpy as np
-import math
 import os
 import argparse
 import xml.etree.ElementTree as ET
@@ -77,7 +75,7 @@ def main():
 
         # for each file in the subfolder...
         for file in os.listdir(folder_dir):
-            if file.endswith('class.tif') and ('P1BS' not in file):
+            if file.rindex('class') and ('P1BS' not in file):
                 # append it to the list of corrected images...
                 shp_ready_files.append(file)
                 # and add 1 to the image count
@@ -94,11 +92,11 @@ def main():
         if shp_ready_count != 0:
 
             # for each detected corrected image...
-            for f2 in class_ready_files:
+            for f2 in shp_ready_files:
                 # Check to see if the image was already processed
                 shp_file_exists = os.path.isfile(os.path.join(output_dir,
                                                   f2.replace('.tif',
-                                                             '_shp.tif'))) 
+                                                             '.shp'))) 
                 
                  # If it wasn't processed...
                 if not shp_file_exists:
@@ -112,29 +110,18 @@ def main():
                                  "dtype": "float32",
                                  "bigtiff": "YES",
                                  "nodata": 255})
-
-                    dst = rasterio.open(os.path.join(output_dir,
-                                       f2.replace('.tif', '_class.tif')),
-                                       'w', **meta)
-                    # dmeta = dst.meta
-                    #dst.meta.update({"count": "1"})
-
                     
-
-
+    
                     # Converting arrays to shapefiles
-                    classied_df = gpd.GeoDataFrame(crs=src.crs)
+                    polygon_df = gpd.GeoDataFrame(crs=src.crs)
                     labels = ['snow_and_ice', 'shadow_and_water', 'geology']
-                    for idx, mask in enumerate([snow_and_ice, shadow_and_water, geology]):
+                    for idx, mask in (polygon_df):
                         pols = polygonize_raster(mask, src.transform)
                         if pols:
-                            classified_df = classied_df.append({'geometry': pols,
-                                                                'label': labels[idx]}, 
-                                                                ignore_index=True)
-                    
-                    classified_df.to_file('classified.shp')
-                    dst.write(classified_df)
-                    dst.close()
+                            polygon_df = polygon_df.append({'geometry': pols,
+                                                            'label': labels[idx]}, 
+                                                             ignore_index=True)
+                    polygon_df.to_file('.shp')
                     # Prints that parameter has been converted
                     print(f2 + ' has been processed.')
        
