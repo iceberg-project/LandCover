@@ -49,14 +49,17 @@ def args_parser():
     return parser.parse_args().input_dir
 
 
-def avgs_finder(atmotxt_dir):
+def avgs_finder(atmotxt_dir, missing_txt):
     """
     Finds the average atmospheric correction values for bands 1 to 7.
-    Returns them as a list
+    Returns them as a list. Will return the temporary spectra values
+    if the atmcorr_regr.py output file is missing.
 
     Parameters:
     atmotxt_dir - the directory of the .txt file with the average
                   atmospheric correction values
+    missing_txt - a boolean. True if the directory is missing the
+                  atmcorr_regr.py output file, False otherwise
 
     Return:
     A list containing the average atmospheric correction values of
@@ -67,21 +70,41 @@ def avgs_finder(atmotxt_dir):
     # values
     averages = []
 
-    # Opens the .txt document 
-    with open(atmotxt_dir, 'r') as atmo_txt:
-        # Stores each line as its own list inside a larger list
-        # Splitting is done due to the formatting in the file
-        text = [line.strip().replace("\n", "").split(": ")
-                for line in atmo_txt]
-    # Closes the file
-    atmo_txt.close()
+    if not missing_txt:
+        # Opens the .txt document 
+        with open(atmotxt_dir, 'r') as atmo_txt:
+            # Stores each line as its own list inside a larger list
+            # Splitting is done due to the formatting in the file
+            text = [line.strip().replace("\n", "").split(": ")
+                    for line in atmo_txt]
+        # Closes the file
+        atmo_txt.close()
+    else:
+        # Opens the .txt document 
+        with open(atmotxt_dir, 'r') as atmo_txt:
+            # Stores each line as its own list inside a larger list
+            # Splitting is done due to the formatting in the file
+            text = [line.strip().replace("\n", "").split()
+                    for line in atmo_txt]
+        # Closes the file
+        atmo_txt.close()
 
-    # Sets a counter variable
+    # Sets a counter variable for reading the last lines.
     n = -7
+
+    # Variable specifies the last line to be read. The atmcorr_temp.txt
+    # file contains band 8, which is considered to equal 0. The output
+    # of atmcorr_regr.py doesn't have this band.
+    last_line = -1
+    if missing_txt:
+        # Doesn't include the temporary text file's last line
+        last_line = -2
+        # Sets the counter variable to account for the extra line
+        n = -8
     
     # while loop goes through the last seven lines of the saved
     # .txt file
-    while n < 0:
+    while n <= last_line:
         # Appends the averages to the initialized averages list
         # Row n, column 1 due to the splitting from earlier
         averages.append(float(text[n][1]))
@@ -178,8 +201,20 @@ def main():
         rad_file = ''
         xml_file = ''
 
+        """
+
+        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        #folder_dir = working_dir
+        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        #DIRECTORY
+        
         # Saves the directory of the folder
         folder_dir = os.path.join(working_dir, folder)
+        """
+
+        # The previous version of the script's subfolder IS this current
+        # version's working folder.
+        folder_dir = working_dir
 
         # Looks for an xml file in the image folder
         for file in os.listdir(folder_dir):
@@ -224,7 +259,7 @@ def main():
             # Saves the directory of the atmcorr_regr.py file
             atmotxt_dir = os.path.join(folder_dir, file_name + '.txt')
             # Calls avgs_finder to retrieve the averages from the file
-            averages = avgs_finder(atmotxt_dir)
+            averages = avgs_finder(atmotxt_dir, False)
             # Saves the directory of the rad.tif image
             rad_dir = os.path.join(folder_dir, rad_file)
             # Calls spec_mather to do the band math and write
@@ -235,14 +270,30 @@ def main():
 
         elif specmath_file_exists:
             print(rad_file.replace('.tif', '_atmcorr.tif') + ' already exists!')
-            
-        elif avg_txt == '':
-            print('atmcorr_regr.py has not been run yet in the directory.')
 
+        # Script does nothing if there isn't any radiance images
         elif rad_file == '':
             print('There are no radiance images in ' +
                   folder_dir + '!')
 
-            
+        # If the output text file from atmcorr_regr.py doesn't exist in the
+        # specified directory, use the values in atmcorr_temp.txt in lib
+        # instead
+        elif avg_txt == '':
+            print('atmcorr_regr.py has not been run yet in the directory or ' +
+                  'its output file is missing. Using the temporary ' +
+                  'spectra values...')
+            # Uses the file containing the temporary spectra instead
+            atmotxt_temp = '../lib/atmcorr_temp.txt'
+            # Calls avgs_finder to retrieve the averages from the file
+            averages = avgs_finder(atmotxt_temp, True)
+            # Saves the directory of the rad.tif image
+            rad_dir = os.path.join(folder_dir, rad_file)
+            # Calls spec_mather to do the band math and write
+            # it to the new file
+            spec_mather(rad_dir, averages, folder_dir)
+
+
 if __name__ == '__main__':
     main()
+

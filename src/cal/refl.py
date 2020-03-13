@@ -22,7 +22,7 @@ import numpy as np
 import rasterio
 
 # Includes the parent directory in the paths able to be imported from
-sys.path.insert(1, "./..")
+sys.path.insert(0, "./..")
 
 # Imports a dictionary containing the Earth-Sun distance in AU depending
 # on the date.
@@ -105,8 +105,20 @@ def main():
         refl_ready_files = []
         refl_ready_count = 0
 
+        """
+        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        #folder_dir = working_dir
+        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        #DIRECTORY
+    
         # Stores the subfolder directory
         folder_dir = os.path.join(working_dir, folder)
+
+        """
+
+        # The previous version of the script's subfolder IS this current
+        # version's working folder.
+        folder_dir = working_dir
 
         # for each file in the subfolder...
         for file in os.listdir(folder_dir):
