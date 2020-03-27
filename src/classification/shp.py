@@ -42,6 +42,27 @@ def args_parser():
     # Returns the directory
     return parser.parse_args().input_dir   
 
+def polygonize_raster(mask, transforms):
+    """Helper function to create polygons from binary masks
+    
+    Arguments:
+        mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
+        transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
+    
+    Returns:
+        list([shapely.Polygon]) -- List of polygons in mask. 
+    """
+    # write mask to polygon
+    polygons = []
+    edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
+    for edge in edges:
+        pol = Polygon([transforms * ele[0] for ele in edge])
+        polygons.append(pol)
+
+    if len(polygons) > 0:
+        return polygonize_raster
+    else:
+        return False
 
 def main():
     """
@@ -108,7 +129,10 @@ def main():
                         label = label_search.group(1)
                     #print(outfile)
                     #print(label)
-                    src = rasterio.open(os.path.join(folder, f2))
+                    with rasterio.open(os.path.join(folder, f2)) as src:
+                        mask = src.read()
+                        transforms = src.transform
+                    print(mask.shape)
                     # print(src.size)
                     meta = src.meta
                     # Update meta to float64
@@ -117,16 +141,13 @@ def main():
                                  "dtype": "float32",
                                  "bigtiff": "YES",
                                  "nodata": 255})
-                    
-    
-                    # Converting arrays to shapefiles
-                    polygon_df = gpd.GeoDataFrame(crs=src.crs)
-                    for idx, mask in (polygon_df):
-                        pols = polygonize_raster(mask, src.transform)
-                        if pols:
-                            polygon_df = polygon_df.append({'geometry': pols,
-                                                            'label': label}, 
-                                                             ignore_index=True)
+
+                    polygon_df = gpd.GeoDataFrame(crs=src.crs) 
+                    pols = polygonize_raster(mask, src.transform)
+                    if pols:
+                       polygon_df = polygon_df.assign({'geometry': pols,
+                                                       'label': label}, 
+                                                        ignore_index=True)
                     polygon_df.to_file(outfile)
                     # Prints that parameter has been converted
                     print(f2 + ' has been processed.')
