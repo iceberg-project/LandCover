@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 import geopandas as gpd
 import cv2
 import re
+import numpy as np
 from shapely.geometry import Polygon, LineString, Point 
 
 def args_parser():
@@ -130,7 +131,7 @@ def main():
                     #print(outfile)
                     #print(label)
                     with rasterio.open(os.path.join(folder, f2)) as src:
-                        mask = src.read()
+                        mask = src.read(1)
                         transforms = src.transform
                     print(mask.shape)
                     # print(src.size)
@@ -141,9 +142,12 @@ def main():
                                  "dtype": "float32",
                                  "bigtiff": "YES",
                                  "nodata": 255})
-
+                    print(mask.shape)
+                    mask_8bit = np.uint8(mask * 255)
+                    #cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                    print(mask_8bit)
                     polygon_df = gpd.GeoDataFrame(crs=src.crs) 
-                    pols = polygonize_raster(mask, src.transform)
+                    pols = polygonize_raster(mask_8bit, src.transform)
                     if pols:
                        polygon_df = polygon_df.assign({'geometry': pols,
                                                        'label': label}, 
