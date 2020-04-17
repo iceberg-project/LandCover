@@ -57,13 +57,15 @@ def polygonize_raster(mask, transforms):
     polygons = []
     edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
     for edge in edges:
-        pol = Polygon([transforms * ele[0] for ele in edge])
-        polygons.append(pol)
+        if len(edge) > 2:
+            pol = Polygon([transforms * ele[0] for ele in edge])
+            polygons.append(pol)
 
     if len(polygons) > 0:
-        return polygonize_raster
+        return polygons
     else:
         return False
+
 
 def main():
     """
@@ -133,9 +135,11 @@ def main():
                     with rasterio.open(os.path.join(folder, f2)) as src:
                         mask = src.read(1)
                         transforms = src.transform
+                        crs = src.crs
+                        meta = src.meta
                     print(mask.shape)
                     # print(src.size)
-                    meta = src.meta
+
                     # Update meta to float64
                     meta.update({"driver": "GTiff",
                                  "count": 1,
@@ -146,8 +150,8 @@ def main():
                     mask_8bit = np.uint8(mask * 255)
                     #cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
                     print(mask_8bit)
-                    polygon_df = gpd.GeoDataFrame(crs=src.crs) 
-                    pols = polygonize_raster(mask_8bit, src.transform)
+                    polygon_df = gpd.GeoDataFrame(crs=crs)
+                    pols = polygonize_raster(mask_8bit, transforms)
                     if pols:
                        polygon_df = polygon_df.assign({'geometry': pols,
                                                        'label': label}, 
