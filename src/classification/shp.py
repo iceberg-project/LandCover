@@ -153,9 +153,8 @@ def main():
                     polygon_df = gpd.GeoDataFrame(crs=crs)
                     pols = polygonize_raster(mask_8bit, transforms)
                     if pols:
-                       polygon_df = polygon_df.assign({'geometry': pols,
-                                                       'label': label}, 
-                                                        ignore_index=True)
+                       polygon_df = polygon_df.assign(geometry=pols)
+
                     polygon_df.to_file(outfile)
                     # Prints that parameter has been converted
                     print(f2 + ' has been processed.')
