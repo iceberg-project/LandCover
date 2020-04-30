@@ -44,29 +44,7 @@ def args_parser():
 
 
 
-def polygonize_raster(mask, transforms):
-    """Helper function to create polygons from binary masks
-    
-    Arguments:
-        mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
-        transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
-    
-    Returns:
-        list([shapely.Polygon]) -- List of polygons in mask. 
-    """
-    # write mask to polygon
-    polygons = []
-    edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
-    for edge in edges:
-        pol = Polygon([transforms * ele[0] for ele in edge])
-        polygons.append(pol)
-
-    if len(polygons) > 0:
-        return polygonize_raster
-    else:
-        return False
-
-
+@profile
 def main():
     """
     Main function. Searches all of the folders within the specified directory 
