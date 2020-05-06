@@ -44,29 +44,7 @@ def args_parser():
 
 
 
-def polygonize_raster(mask, transforms):
-    """Helper function to create polygons from binary masks
-    
-    Arguments:
-        mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
-        transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
-    
-    Returns:
-        list([shapely.Polygon]) -- List of polygons in mask. 
-    """
-    # write mask to polygon
-    polygons = []
-    edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
-    for edge in edges:
-        pol = Polygon([transforms * ele[0] for ele in edge])
-        polygons.append(pol)
-
-    if len(polygons) > 0:
-        return polygonize_raster
-    else:
-        return False
-
-
+@profile
 def main():
     """
     Main function. Searches all of the folders within the specified directory 
@@ -165,7 +143,7 @@ def main():
                         i += 1
 
                     dst = rasterio.open(os.path.join(output_dir,
-                                       f2.replace('.tif', '_class.tif')),
+                                       f2.replace('.tif', '_sumbands.tif')),
                                        'w', **meta)
                     # dmeta = dst.meta
                     #dst.meta.update({"count": "1"})
@@ -181,15 +159,15 @@ def main():
                     snow_and_ice = np.int32(np.where(sum_bands >= 3, 1, 0))
                     #print(snow_and_ice)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_snow.tif')),
+                                                     f2.replace('.tif', '_class_snow.tif')),
                                                      'w', **meta)
                     dst.write(snow_and_ice)
                     dst.close()
 
-                    shadow_and_water = np.int32(np.where(sum_bands <= 1, 1, 0))
+                    shadow_and_water = np.int32(np.where((sum_bands > 0) & (sum_bands <= 1), 1, 0))
                     #print(shadow_and_water)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_dark.tif')),
+                                                     f2.replace('.tif', '_class_water.tif')),
                                                      'w', **meta)
                     dst.write(shadow_and_water)
                     dst.close()
@@ -199,7 +177,7 @@ def main():
 
                     #print(geology)
                     dst = rasterio.open(os.path.join(output_dir,
-                                                     f2.replace('.tif', '_geology.tif')),
+                                                     f2.replace('.tif', '_class_geology.tif')),
                                                      'w', **meta)
                     dst.write(geology)
                     dst.close()
