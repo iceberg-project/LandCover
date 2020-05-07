@@ -1,23 +1,21 @@
-"""
-Authors: Brian Szutu
-Emails: bs886@nau.edu
-License: Northern Arizona University
-Copyright: 2018-2019
+# Authors: Brian Szutu
+# Emails: bs886@nau.edu
+# License: Northern Arizona University
+# Copyright: 2018-2019
 
-This script performs band math on each rad.tif image using the outputted
-average atmospheric correction values in the .txt outputted by atmcorr_regr.py.
-The band math is as follows:
-s1 - s2.
-s1 is the band data at a certain band between bands 1 and 7, inclusive.
-s2 is the corresponding average atmospheric correction value for that
-specific band.
+# This script performs band math on each rad.tif image using the outputted
+# average atmospheric correction values in the .txt outputted by atmcorr_regr.py.
+# The band math is as follows:
+# s1 - s2.
+# s1 is the band data at a certain band between bands 1 and 7, inclusive.
+# s2 is the corresponding average atmospheric correction value for that
+# specific band.
 
-The spectral-mathed image will be outputted in the same folder as the
-radiance image.
+# The spectral-mathed image will be outputted in the same folder as the
+# radiance image.
 
-The script should be called from console and the inputted directory should
-contain the images, relevent .xml, etc that need to be processed
-"""
+# The script should be called from console and the inputted directory should
+# contain the images, relevent .xml, etc that need to be processed
 
 import os
 import argparse
@@ -27,15 +25,13 @@ import rasterio
 
 
 def args_parser():
-    """
-    Reads the image directory passed in from console.
+    # Reads the image directory passed in from console.
 
-    Parameters:
-    None
+    # Parameters:
+    # None
 
-    Return:
-    Returns a directory that has the images to be analyzed within it
-    """
+    # Return:
+    # Returns a directory that has the images to be analyzed within it
 
     # Creates an ArgumentParser object to hold the console input
     parser = argparse.ArgumentParser()
@@ -50,21 +46,19 @@ def args_parser():
 
 
 def avgs_finder(atmotxt_dir, missing_txt):
-    """
-    Finds the average atmospheric correction values for bands 1 to 7.
-    Returns them as a list. Will return the temporary spectra values
-    if the atmcorr_regr.py output file is missing.
+    # Finds the average atmospheric correction values for bands 1 to 7.
+    # Returns them as a list. Will return the temporary spectra values
+    # if the atmcorr_regr.py output file is missing.
 
-    Parameters:
-    atmotxt_dir - the directory of the .txt file with the average
-                  atmospheric correction values
-    missing_txt - a boolean. True if the directory is missing the
-                  atmcorr_regr.py output file, False otherwise
+    # Parameters:
+    # atmotxt_dir - the directory of the .txt file with the average
+                  # atmospheric correction values
+    # missing_txt - a boolean. True if the directory is missing the
+                  # atmcorr_regr.py output file, False otherwise
 
-    Return:
-    A list containing the average atmospheric correction values of
-    bands 1 through 7
-    """
+    # Return:
+    # A list containing the average atmospheric correction values of
+    # bands 1 through 7
 
     # Initializes an empty list to store the average correction
     # values
@@ -116,20 +110,18 @@ def avgs_finder(atmotxt_dir, missing_txt):
 
 
 def spec_mather(rad_dir, averages, folder_dir):
-    """
-    Does the spectral band math to the image. A new image is created
-    as a result, with its name being the name of the rad.tif image but
-    with _specmath after rad. The band math is as follows:
-    s1 - s2.
-    s1 is the band data of one of the bands of the original rad.tif image
-    while s2 is the corresponding average band atmospheric correction value
+    # Does the spectral band math to the image. A new image is created
+    # as a result, with its name being the name of the rad.tif image but
+    # with _specmath after rad. The band math is as follows:
+    # s1 - s2.
+    # s1 is the band data of one of the bands of the original rad.tif image
+    # while s2 is the corresponding average band atmospheric correction value
 
-    Parameters:
-    rad_dir    - the directory of the rad.tif image
-    averages   - a list holding the average atmospheric correction values of
-                 bands 1 through 7
-    folder_dir - the directory of the image's folder
-    """
+    # Parameters:
+    # rad_dir    - the directory of the rad.tif image
+    # averages   - a list holding the average atmospheric correction values of
+                 # bands 1 through 7
+    # folder_dir - the directory of the image's folder
 
     # Opens the rad.tif image
     src = rasterio.open(rad_dir)
@@ -154,15 +146,13 @@ def spec_mather(rad_dir, averages, folder_dir):
 
 
 def main():
-    """
-    The main function. Calls the other functions.
+    # The main function. Calls the other functions.
 
-    Paramters:
-    None
+    # Paramters:
+    # None
 
-    Return:
-    None
-    """
+    # Return:
+    # None
 
     # Gets the working directory from the console input
     working_dir = args_parser()
@@ -174,23 +164,21 @@ def main():
     # the inputted directory
     folders = [working_dir]
 
-    """
 
-    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-    #folders = [working_dir] to folders = []
-    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    #DIRECTORY
+    # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    # #folders = [working_dir] to folders = []
+    # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    # #DIRECTORY
     
-    # for each file in the specified directory...
-    for file in os.listdir(working_dir):
-        # if the file is NOT a folder
-        if "." in file:
-            continue
-        # if the file is a folder...
-        else:
-            # append it to the folders list
-            folders.append(file)
-    """
+    # # for each file in the specified directory...
+    # for file in os.listdir(working_dir):
+        # # if the file is NOT a folder
+        # if "." in file:
+            # continue
+        # # if the file is a folder...
+        # else:
+            # # append it to the folders list
+            # folders.append(file)
 
     # for each folder in the folders list...
     for folder in folders:
@@ -201,16 +189,13 @@ def main():
         rad_file = ''
         xml_file = ''
 
-        """
-
-        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        #folder_dir = working_dir
-        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        #DIRECTORY
+        # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        # #folder_dir = working_dir
+        # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        # #DIRECTORY
         
-        # Saves the directory of the folder
-        folder_dir = os.path.join(working_dir, folder)
-        """
+        # # Saves the directory of the folder
+        # folder_dir = os.path.join(working_dir, folder)
 
         # The previous version of the script's subfolder IS this current
         # version's working folder.

@@ -1,13 +1,11 @@
 
-"""
-Authors: Helen Eifert, Brad Spitzbart, Brian Szutu
-Emails: he248@nau.edu, bradley.spitzbart@stonybrook.edu, bs886@nau.edu
-License: Stony Brook University, Northern Arizona University
-Copyright: 2018-2019
-This script runs a set of band math parameters to identify land cover types.
-It searches through the console specified directory for refl.tif images. If no refl.tif images exist, the script will not run.
-The output will an image-sized array of values relating to different landcover classes.
-"""
+# Authors: Helen Eifert, Brad Spitzbart, Brian Szutu
+# Emails: he248@nau.edu, bradley.spitzbart@stonybrook.edu, bs886@nau.edu
+# License: Stony Brook University, Northern Arizona University
+# Copyright: 2018-2019
+# This script runs a set of band math parameters to identify land cover types.
+# It searches through the console specified directory for refl.tif images. If no refl.tif images exist, the script will not run.
+# The output will an image-sized array of values relating to different landcover classes.
 
 # Imports the necessary packages. Rasterio is used to access the band data in .tif files
 import rasterio
@@ -20,13 +18,11 @@ import cv2
 from shapely.geometry import Polygon, LineString, Point 
 
 def args_parser():
-    """
-    Reads in the image directory from the console
-    Parameters:
-    None
-    Return:
-    Returns the specified directory as a string
-    """
+    # Reads in the image directory from the console
+    # Parameters:
+    # None
+    # Return:
+    # Returns the specified directory as a string
 
     # Creates an object to take in the directory
     parser = argparse.ArgumentParser(description='Takes in a console-inputted\
@@ -46,15 +42,13 @@ def args_parser():
 
 @profile
 def main():
-    """
-    Main function. Searches all of the folders within the specified directory 
-    for atmospherically corrected reflectance .tif images and their associated 
-    .xml files. Calls args_parser to see what directory was specified.
-    Parameters:
-    None
-    Return:
-    None
-    """
+    # Main function. Searches all of the folders within the specified directory 
+    # for atmospherically corrected reflectance .tif images and their associated 
+    # .xml files. Calls args_parser to see what directory was specified.
+    # Parameters:
+    # None
+    # Return:
+    # None
 
     # Finds the current directory and appends a new folder to be made
     working_dir = args_parser()

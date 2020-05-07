@@ -1,17 +1,15 @@
-"""
-Authors: Brad Spitzbart, Brian Szutu
-Emails: bradley.spitzbart@stonybrook.edu, bs886@nau.edu
-License: Stony Brook University, Northern Arizona University
-Copyright: 2018-2019
+# Authors: Brad Spitzbart, Brian Szutu
+# Emails: bradley.spitzbart@stonybrook.edu, bs886@nau.edu
+# License: Stony Brook University, Northern Arizona University
+# Copyright: 2018-2019
 
-This script is a more generalized version of Brad Spitzbart's reflectance
-script. It searches through the folders in the console specified directory for
-atmospherically corrected .tif images and their corresponding .xml files.
-If no .tif or .xml files exist in a folder, the script will not run.
+# This script is a more generalized version of Brad Spitzbart's reflectance
+# script. It searches through the folders in the console specified directory for
+# atmospherically corrected .tif images and their corresponding .xml files.
+# If no .tif or .xml files exist in a folder, the script will not run.
 
-The reflectance image will be outputted in the same folder as the
-atmospherically corrected image.
-"""
+# The reflectance image will be outputted in the same folder as the
+# atmospherically corrected image.
 
 import xml.etree.ElementTree as ET
 import math
@@ -29,15 +27,13 @@ sys.path.insert(0, "./..")
 from lib.earth_sun_dist import date_distance
 
 def args_parser():
-    """
-    Reads in the image directory from the console
+    # Reads in the image directory from the console
 
-    Parameters:
-    None
+    # Parameters:
+    # None
 
-    Return:
-    Returns the specified directory as a string
-    """
+    # Return:
+    # Returns the specified directory as a string
 
     # Creates an object to take in the directory
     parser = argparse.ArgumentParser(description='Takes in a console-inputted\
@@ -54,17 +50,15 @@ def args_parser():
     return parser.parse_args().input_dir
 
 def main():
-    """
-    Main function. Searches all of the folders within the specified directory 
-    for atmospherically corrected .tif images and their associated .xml files.
-    Calls args_parser to see what directory was specified.
+    # Main function. Searches all of the folders within the specified directory 
+    # for atmospherically corrected .tif images and their associated .xml files.
+    # Calls args_parser to see what directory was specified.
 
-    Parameters:
-    None
+    # Parameters:
+    # None
 
-    Return:
-    None
-    """
+    # Return:
+    # None
 
     # Finds the current directory and appends a new folder to be made
     working_dir = args_parser()
@@ -75,23 +69,21 @@ def main():
     # the inputted directory
     folders = [working_dir]
 
-    """
 
-    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-    #folders = [working_dir] to folders = []
-    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    #DIRECTORY
+    # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    # #folders = [working_dir] to folders = []
+    # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    # #DIRECTORY
     
-    # for each file/folder in the directory...
-    for file in os.listdir(working_dir):
-        # if there is a . or the something is named Output Files...
-        if "." in file or file == 'Output Files':
-            # ...Don't do anything with them
-            continue
-        else:
-            # Else, append the thing being looked at into the folders list
-            folders.append(file)
-    """
+    # # for each file/folder in the directory...
+    # for file in os.listdir(working_dir):
+        # # if there is a . or the something is named Output Files...
+        # if "." in file or file == 'Output Files':
+            # # ...Don't do anything with them
+            # continue
+        # else:
+            # # Else, append the thing being looked at into the folders list
+            # folders.append(file)
 
     # for each folder in the specified directory...
     for folder in folders:
@@ -105,16 +97,14 @@ def main():
         refl_ready_files = []
         refl_ready_count = 0
 
-        """
-        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        #folder_dir = working_dir
-        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        #DIRECTORY
+        # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        # #folder_dir = working_dir
+        # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        # #DIRECTORY
     
-        # Stores the subfolder directory
-        folder_dir = os.path.join(working_dir, folder)
+        # # Stores the subfolder directory
+        # folder_dir = os.path.join(working_dir, folder)
 
-        """
 
         # The previous version of the script's subfolder IS this current
         # version's working folder.

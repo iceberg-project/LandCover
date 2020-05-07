@@ -1,24 +1,22 @@
-"""
-Author: Brian Szutu
-Email: bs886@nau.edu
-License: NAU
-Copyright: 2018-2019
+# Author: Brian Szutu
+# Email: bs886@nau.edu
+# License: NAU
+# Copyright: 2018-2019
 
-This script is used to take in .txt files of atmospheric spectrographic data
-in subfolders in order to calculate the atmospheric correction values needed.
+# This script is used to take in .txt files of atmospheric spectrographic data
+# in subfolders in order to calculate the atmospheric correction values needed.
 
-The output files will automatically be sent into the same folder as the analyzed .txt
-files. The name of the output file will be NO_XML_PRESENT if there is no
-.xml file associated with the image band data to base the name off of.
+# The output files will automatically be sent into the same folder as the analyzed .txt
+# files. The name of the output file will be NO_XML_PRESENT if there is no
+# .xml file associated with the image band data to base the name off of.
 
-This script is safe to run multiple times in the same directory.
+# This script is safe to run multiple times in the same directory.
 
-Change(s) from version 1.2 of atmcorr_regr.py:
-- The input directory should now be the folder with the text file directly
-  inside of it
+# Change(s) from version 1.2 of atmcorr_regr.py:
+# - The input directory should now be the folder with the text file directly
+  # inside of it
 
-Version 1.3
-"""
+# Version 1.3
 
 # Imports the stats, argsparse, and os packages
 # The xml package is used to look into .xml files
@@ -29,15 +27,13 @@ from scipy import stats
 
 
 def args_parser():
-    """
-    Reads the image directory passed in from console.
+    # Reads the image directory passed in from console.
 
-    Parameters:
-    None
+    # Parameters:
+    # None
 
-    Return:
-    Returns a directory that has the images to be analyzed within it
-    """
+    # Return:
+    # Returns a directory that has the images to be analyzed within it
 
     # Creates an ArgumentParser object to hold the console input
     parser = argparse.ArgumentParser()
@@ -55,16 +51,14 @@ def args_parser():
 
 
 def reader(file):
-    """
-    Reads ONE file passed into it.
+    # Reads ONE file passed into it.
 
-    Parameters:
-    file - The file to be read. It's actually the directory of the file
+    # Parameters:
+    # file - The file to be read. It's actually the directory of the file
 
-    Return:
-    Returns an 2D list containing ALL of the bands and their respective data. Each row represents
-    each band
-    """
+    # Return:
+    # Returns an 2D list containing ALL of the bands and their respective data. Each row represents
+    # each band
     
     # Creates an empty list to hold all of the band values. Each list
     # inside will correspond to a band
@@ -101,24 +95,22 @@ def reader(file):
 
 def writer(file, file_name, output_dir, pass_fail_stat_arr, 
            pass_fail_arr, intercept_arr, set_check):
-    """
-    Writes into a new file.
+    # Writes into a new file.
 
-    Parameters:
-    file               - name of a text file in a subfolder
-    file_name          - the name of the new file to be created and/or written into.
-                         Same name as the subfolder
-    output_dir         - the output directory. Folder specific                 
-    pass_fail_stat_arr - a list containing the numbers compared to 3 in order to determine
-                         pass/fail status of each band
-    pass_fail_arr      - a list containing the pass/fail status of each band
-    intercept_arr      - a list containing the atmospheric correction for each band
-    set_check          - a string that equals either Pass or Fail. Depends on how many
-                         Fails are in pass_fail_arr. Default overall Fail number is 1
+    # Parameters:
+    # file               - name of a text file in a subfolder
+    # file_name          - the name of the new file to be created and/or written into.
+                         # Same name as the subfolder
+    # output_dir         - the output directory. Folder specific                 
+    # pass_fail_stat_arr - a list containing the numbers compared to 3 in order to determine
+                         # pass/fail status of each band
+    # pass_fail_arr      - a list containing the pass/fail status of each band
+    # intercept_arr      - a list containing the atmospheric correction for each band
+    # set_check          - a string that equals either Pass or Fail. Depends on how many
+                         # Fails are in pass_fail_arr. Default overall Fail number is 1
 
-    Return:
-    None
-    """
+    # Return:
+    # None
 
     # Creates a file to APPEND text to the end of it
     file_write = open(os.path.join(output_dir, file_name+'.txt'), 'a+')
@@ -146,20 +138,19 @@ def writer(file, file_name, output_dir, pass_fail_stat_arr,
 
 
 def tester_caller(band_array, intercept_arr, slope_arr):
-    """
-    The main function of the testing part of the program. Calls tester and pass_fail_checker.
-    Returns a list of numbers, each corresponding to each band, to compare to 3.
 
-    Parameters:
-    band_array    - a 2D list containing all of the band data for each band
-    intercept_arr - a list containing the atmospheric correction for each band
-    slope_arr     - a list containing the slope for each band compared to the last band
+    # The main function of the testing part of the program. Calls tester and pass_fail_checker.
+    # Returns a list of numbers, each corresponding to each band, to compare to 3.
 
-    Return:
-    Returns two lists. pass_fail_stat_arr contains the numbers compared to 3 to determine the
-    pass/fail statuses of each band while pass_fail_arr contains the pass/fail statuses of each
-    band.
-    """
+    # Parameters:
+    # band_array    - a 2D list containing all of the band data for each band
+    # intercept_arr - a list containing the atmospheric correction for each band
+    # slope_arr     - a list containing the slope for each band compared to the last band
+
+    # Return:
+    # Returns two lists. pass_fail_stat_arr contains the numbers compared to 3 to determine the
+    # pass/fail statuses of each band while pass_fail_arr contains the pass/fail statuses of each
+    # band.
     
     # Empy lists to be iterated into with the numbers being compared to 3 and the
     # pass/fail statuses, respectively.
@@ -179,16 +170,16 @@ def tester_caller(band_array, intercept_arr, slope_arr):
 
 
 def inter_slope(band_array):
-    """
-    Used to calculate the intercepts and slopes of each band vs the last band. Calls the other
-    functions in this block
 
-    Parameters:
-    band_array - a 2D list containing all of the data for each band in a .txt file
+    # Used to calculate the intercepts and slopes of each band vs the last band. Calls the other
+    # functions in this block
 
-    Return:
-    Returns two lists containing the intercepts and slopes of each band vs the last band
-    """
+    # Parameters:
+    # band_array - a 2D list containing all of the data for each band in a .txt file
+
+    # Return:
+    # Returns two lists containing the intercepts and slopes of each band vs the last band
+
     # Initializes empty lists of length 7 for each band. Kinda wish I
     # could've done this using append. 
     intercept_arr = [0, 0, 0, 0, 0, 0, 0]
@@ -205,18 +196,16 @@ def inter_slope(band_array):
 
 
 def tester(band_array, intercept_arr, slope_arr, n):
-    """
-    Calculates the number to be compared to 3 in order to determine the pass/fail status of a band
+    # Calculates the number to be compared to 3 in order to determine the pass/fail status of a band
 
-    Parameters: 
-    band_array    - a 2D list containing all of the data for each band in a .txt file
-    intercept_arr - a list containing the intercepts between each band vs the last band
-    slope_arr     - a list containing the slopes between each band vs the last band
-    n             - the n + 1 band to have the value compared to 3 to be calculated for
+    # Parameters: 
+    # band_array    - a 2D list containing all of the data for each band in a .txt file
+    # intercept_arr - a list containing the intercepts between each band vs the last band
+    # slope_arr     - a list containing the slopes between each band vs the last band
+    # n             - the n + 1 band to have the value compared to 3 to be calculated for
 
-    Return:
-    A single float to be compared to 3
-    """
+    # Return:
+    # A single float to be compared to 3
 
     # Initializes a variable to hold a total sum
     calc_sum = 0
@@ -247,15 +236,14 @@ def tester(band_array, intercept_arr, slope_arr, n):
 
 
 def pass_fail_checker(pass_fail_num):
-    """
-    Compares a number to 3.
+    # Compares a number to 3.
 
-    Parameters:
-    pass_fail_num - a float to be compared to 3
+    # Parameters:
+    # pass_fail_num - a float to be compared to 3
 
-    Return:
-    Returns Pass or Fail depending on how the float compares to 3
-    """
+    # Return:
+    # Returns Pass or Fail depending on how the float compares to 3
+
     if pass_fail_num < 3:
         return 'Pass'
     else:
@@ -263,18 +251,17 @@ def pass_fail_checker(pass_fail_num):
 
 
 def dataset_checker(pass_fail_arr, pass_fail_stat_arr):
-    """
-    Checks if any of the bands out of the first seven 'Fail' the test.
-    If any a select number of bands do, then the whole data set fails.
+    # Checks if any of the bands out of the first seven 'Fail' the test.
+    # If any a select number of bands do, then the whole data set fails.
 
-    Parameters:
-    pass_fail_arr - a list containing the pass/fail status of each band
-    pass_fail_stat_arr - a list containing the numbers compared to 3
+    # Parameters:
+    # pass_fail_arr - a list containing the pass/fail status of each band
+    # pass_fail_stat_arr - a list containing the numbers compared to 3
 
-    Return:
-    A string being either Pass or Fail depending on how many Fails there are in
-    pass_fail_arr
-    """
+    # Return:
+    # A string being either Pass or Fail depending on how many Fails there are in
+    # pass_fail_arr
+
     # Variable used to keep track of how many Fails there are
     fail_n = 0
     # Finds out how many fails are in the data set. If the 
@@ -297,17 +284,16 @@ def dataset_checker(pass_fail_arr, pass_fail_stat_arr):
 
 
 def avg_intercept(total_intercept_arr, txt_count):
-    """
-    Calculates the AVERAGE ATMOSPHERIC CORRECTION for each band in a subfolder
+    # Calculates the AVERAGE ATMOSPHERIC CORRECTION for each band in a subfolder
 
-    Parameters:
-    total_intercept_arr - a 2D list containing the atmospheric corrections for each band in
-                          each .txt file
-    txt_count           - the number of .txt files in the subfolder
+    # Parameters:
+    # total_intercept_arr - a 2D list containing the atmospheric corrections for each band in
+                          # each .txt file
+    # txt_count           - the number of .txt files in the subfolder
 
-    Return:
-    Returns a list containing the average atmospheric correction for each band in a subfolder
-    """
+    # Return:
+    # Returns a list containing the average atmospheric correction for each band in a subfolder
+
     # Initializes 7 variables to hold the sum of each of their respective band
     # intercepts
     (band1_sum, band2_sum, band3_sum, band4_sum, band5_sum, band6_sum, band7_sum) = \
@@ -339,19 +325,18 @@ def avg_intercept(total_intercept_arr, txt_count):
 
  
 def avg_writer(file_name, output_dir, band_avg_arr):
-    """
-    Writes the avg intercept to the document at the end
+    # Writes the avg intercept to the document at the end
 
-    Parameters:
-    file_name    - the name of the file to be appended to. In the same loop, it should be the
-                   same name as the one mentioned way above in the writer() function
-    output_dir   - the output directory. File specific
-    band_avg_arr - a list containing the average atmospheric correction for each band in a
-                   subfolder
+    # Parameters:
+    # file_name    - the name of the file to be appended to. In the same loop, it should be the
+                   # same name as the one mentioned way above in the writer() function
+    # output_dir   - the output directory. File specific
+    # band_avg_arr - a list containing the average atmospheric correction for each band in a
+                   # subfolder
 
-    Return:
-    None
-    """
+    # Return:
+    # None
+
     file_write = open(os.path.join(output_dir, file_name + '.txt'), 'a+')
     file_write.write('ATMOSPHERIC CORRECTION AVG: \n')
     for x in range(7):
@@ -363,16 +348,14 @@ def avg_writer(file_name, output_dir, band_avg_arr):
 
 
 def main():
-    """
-    Main function. Responsible for having all folders be searched and all
-    files be read. Calls the other big functions
+    # Main function. Responsible for having all folders be searched and all
+    # files be read. Calls the other big functions
 
-    Parameters:
-    None
+    # Parameters:
+    # None
 
-    Return:
-    None
-    """
+    # Return:
+    # None
     
     # Saves the console-passed directory to a variable for future use
     working_dir = args_parser()
@@ -383,23 +366,21 @@ def main():
     # the inputted directory
     folders = [working_dir]
 
-    """
 
-    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-    #folders = [working_dir] to folders = []
-    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    #DIRECTORY
+    # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    # #folders = [working_dir] to folders = []
+    # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+    # #DIRECTORY
     
-    # for each file/folder in the directory...
-    for file in os.listdir(working_dir):
-        # if there is a . or the something is named Output Files...
-        if "." in file or file == 'Output Files':
-            # ...Don't do anything with them
-            continue
-        else:
-            # Else, append the thing being looked at into the folders list
-            folders.append(file)
-    """
+    # # for each file/folder in the directory...
+    # for file in os.listdir(working_dir):
+        # # if there is a . or the something is named Output Files...
+        # if "." in file or file == 'Output Files':
+            # # ...Don't do anything with them
+            # continue
+        # else:
+            # # Else, append the thing being looked at into the folders list
+            # folders.append(file)
 
 
     # for every single folder in the folders list...
@@ -410,16 +391,14 @@ def main():
         txt_files = []
         txt_count = 0
 
-        """
 
-        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        #folder_dir = working_dir
-        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        #DIRECTORY
+        # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        # #folder_dir = working_dir
+        # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
+        # #DIRECTORY
         
-        # Saves the directory of the folder
-        folder_dir = os.path.join(working_dir, folder)
-        """
+        # # Saves the directory of the folder
+        # folder_dir = os.path.join(working_dir, folder)
 
         # The previous version of the script's subfolder IS this current
         # version's working folder.
