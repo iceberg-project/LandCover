@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 import geopandas as gpd
 import cv2
 import re
+import numpy as np
 from shapely.geometry import Polygon, LineString, Point 
 
 def args_parser():
@@ -41,6 +42,29 @@ def args_parser():
 
     # Returns the directory
     return parser.parse_args().input_dir   
+
+def polygonize_raster(mask, transforms):
+    """Helper function to create polygons from binary masks
+    
+    Arguments:
+        mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
+        transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
+    
+    Returns:
+        list([shapely.Polygon]) -- List of polygons in mask. 
+    """
+    # write mask to polygon
+    polygons = []
+    edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
+    for edge in edges:
+        if len(edge) > 2:
+            pol = Polygon([transforms * ele[0] for ele in edge])
+            polygons.append(pol)
+
+    if len(polygons) > 0:
+        return polygons
+    else:
+        return False
 
 
 def main():
@@ -108,25 +132,29 @@ def main():
                         label = label_search.group(1)
                     #print(outfile)
                     #print(label)
-                    src = rasterio.open(os.path.join(folder, f2))
+                    with rasterio.open(os.path.join(folder, f2)) as src:
+                        mask = src.read(1)
+                        transforms = src.transform
+                        crs = src.crs
+                        meta = src.meta
+                    print(mask.shape)
                     # print(src.size)
-                    meta = src.meta
+
                     # Update meta to float64
                     meta.update({"driver": "GTiff",
                                  "count": 1,
                                  "dtype": "float32",
                                  "bigtiff": "YES",
                                  "nodata": 255})
-                    
-    
-                    # Converting arrays to shapefiles
-                    polygon_df = gpd.GeoDataFrame(crs=src.crs)
-                    for idx, mask in (polygon_df):
-                        pols = polygonize_raster(mask, src.transform)
-                        if pols:
-                            polygon_df = polygon_df.append({'geometry': pols,
-                                                            'label': label}, 
-                                                             ignore_index=True)
+                    print(mask.shape)
+                    mask_8bit = np.uint8(mask * 255)
+                    #cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                    print(mask_8bit)
+                    polygon_df = gpd.GeoDataFrame(crs=crs)
+                    pols = polygonize_raster(mask_8bit, transforms)
+                    if pols:
+                       polygon_df = polygon_df.assign(geometry=pols)
+
                     polygon_df.to_file(outfile)
                     # Prints that parameter has been converted
                     print(f2 + ' has been processed.')
