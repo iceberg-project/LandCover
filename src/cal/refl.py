@@ -63,26 +63,21 @@ def main():
     # Finds the current directory and appends a new folder to be made
     working_dir = args_parser()
 
-    # Empty list holds all of the relevent folders in the directory
-    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
-    # This makes it so the script searches for just images within
-    # the inputted directory
+    # Initializes an empty list for the directory of image files
     folders = [working_dir]
 
-
-    # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    # #uncomment this block if images are in subfolders:
     # #folders = [working_dir] to folders = []
-    # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    # #DIRECTORY
+    # #searches through subdirectories of input directory
     
-    # # for each file/folder in the directory...
+    # # for each file/folder in the specified directory...
     # for file in os.listdir(working_dir):
-        # # if there is a . or the something is named Output Files...
+        # # if there is a . or the file is named Output Files...
         # if "." in file or file == 'Output Files':
-            # # ...Don't do anything with them
+            # # ...don't do anything
             # continue
+        # # else, append the file to the folders list
         # else:
-            # # Else, append the thing being looked at into the folders list
             # folders.append(file)
 
     # for each folder in the specified directory...
@@ -97,17 +92,13 @@ def main():
         refl_ready_files = []
         refl_ready_count = 0
 
-        # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        # #folder_dir = working_dir
-        # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        # #DIRECTORY
-    
-        # # Stores the subfolder directory
-        # folder_dir = os.path.join(working_dir, folder)
+        ##uncomment this block if images are in subfolders:
+        ##folder_dir = working_dir
+        ##searches through subdirectories of input directory
+        
+        ## Saves the directory of the folder
+        #folder_dir = os.path.join(working_dir, folder)
 
-
-        # The previous version of the script's subfolder IS this current
-        # version's working folder.
         folder_dir = working_dir
 
         # for each file in the subfolder...
