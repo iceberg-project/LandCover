@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
 
-"""
-Authors: Helen Eifert, Brad Spitzbart, Brian Szutu
-Emails: he248@nau.edu, bradley.spitzbart@stonybrook.edu, bs886@nau.edu
-License: Stony Brook University, Northern Arizona University
-Copyright: 2018-2019
-This script takes different band math parameter output files from the class.py 
-script and converts them into shapefiles for mapping needs.
-"""
+# Authors: Helen Eifert, Brad Spitzbart, Brian Szutu
+# Emails: he248@nau.edu, bradley.spitzbart@stonybrook.edu, bs886@nau.edu
+# License: Stony Brook University, Northern Arizona University
+# Copyright: 2018-2019
+
+# This script must follow all calibration steps in src/cal and come after class.py.
+
+# This script takes different classified output files from the class.py script and 
+# converts them into shapefiles for mapping needs.
 
 # Imports the necessary packages. Rasterio is used to access the band data in .tif files
 import rasterio
@@ -21,13 +21,11 @@ import numpy as np
 from shapely.geometry import Polygon, LineString, Point 
 
 def args_parser():
-    """
-    Reads in the image directory from the console
-    Parameters:
-    None
-    Return:
-    Returns the specified directory as a string
-    """
+    # Reads in the image directory from the console
+    # Parameters:
+    # None
+    # Return:
+    # Returns the specified directory as a string
 
     # Creates an object to take in the directory
     parser = argparse.ArgumentParser(description='Takes in a console-inputted\
@@ -44,15 +42,15 @@ def args_parser():
     return parser.parse_args().input_dir   
 
 def polygonize_raster(mask, transforms):
-    """Helper function to create polygons from binary masks
+    # Helper function to create polygons from binary masks
     
-    Arguments:
-        mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
-        transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
+    # Arguments:
+        # mask {np.ndarray} -- 2D numpy array with 1s and 0s, used to draw polygon
+        # transforms {Affine} -- affine matrix from rasterio.open().transforms, used to project polygon
     
-    Returns:
-        list([shapely.Polygon]) -- List of polygons in mask. 
-    """
+    # Returns:
+        # list([shapely.Polygon]) -- List of polygons in mask. 
+        
     # write mask to polygon
     polygons = []
     edges = cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -68,15 +66,13 @@ def polygonize_raster(mask, transforms):
 
 
 def main():
-    """
-    Main function. Searches all of the folders within the specified directory 
-    for atmospherically corrected .tif images and their associated .xml files.
-    Calls args_parser to see what directory was specified.
-    Parameters:
-    None
-    Return:
-    None
-    """
+    # Main function. Searches all of the folders within the specified directory 
+    # for classified .tif images.
+    # Calls args_parser to see what directory was specified.
+    # Parameters:
+    # None
+    # Return:
+    # None
 
     # Finds the current directory and appends a new folder to be made
     working_dir = args_parser()
