@@ -3,9 +3,15 @@
 # Emails: he248@nau.edu, bradley.spitzbart@stonybrook.edu, bs886@nau.edu
 # License: Stony Brook University, Northern Arizona University
 # Copyright: 2018-2019
-# This script runs a set of band math parameters to identify land cover types.
-# It searches through the console specified directory for refl.tif images. If no refl.tif images exist, the script will not run.
-# The output will an image-sized array of values relating to different landcover classes.
+
+# This script must follow all calibration steps in src/cal.
+
+# This script runs one band math parameter to identify simple land cover types. It searches 
+# through the console specified directory for refl.tif images. If no refl.tif images exist, 
+# the script will not run.
+
+# The output will be an image-sized array of values relating to different land cover classes
+# and will be outputted into the same folder as the reflectance image.
 
 # Imports the necessary packages. Rasterio is used to access the band data in .tif files
 import rasterio
