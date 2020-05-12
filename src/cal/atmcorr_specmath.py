@@ -3,11 +3,19 @@
 # License: Northern Arizona University
 # Copyright: 2018-2019
 
-# This script performs band math on each rad.tif image using the outputted
-# average atmospheric correction values in the .txt outputted by atmcorr_regr.py.
+# This script must follow rad.py and come before refl.py
+
+# This script performs a simple band math subtraction on each rad.tif image.
+# The minuend is the rad.tif image and the subtrahend is one of the following
+# a) average atmospheric spectrum in the .txt outputted by atmcorr_regr.py.
+# OR
+# b) generic Antarctic atmospheric spectrum, atmcorr_temp.txt, located in lib.
+# If a is an option, it will supercede b.
+
 # The band math is as follows:
 # s1 - s2.
-# s1 is the band data at a certain band between bands 1 and 7, inclusive.
+# s1 is the data at each band between bands 1 and 7, inclusive.
+# band 8 will remain the same.
 # s2 is the corresponding average atmospheric correction value for that
 # specific band.
 
