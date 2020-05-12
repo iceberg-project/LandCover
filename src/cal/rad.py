@@ -54,17 +54,12 @@ def main():
     # Saves the specified directory to a variable
     working_dir = args_parser()
 
-    # Initializes an empty list to hold all of the relevant folders
-    # containing images
-    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
-    # This makes it so the script searches for just images within
-    # the inputted directory
+    # Initializes an empty list for the directory of image files
     folders = [working_dir]
 
-    # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    # #uncomment this block if images are in subfolders:
     # #folders = [working_dir] to folders = []
-    # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    # #DIRECTORY
+    # #searches through subdirectories of input directory
     
     # # for each file/folder in the specified directory...
     # for file in os.listdir(working_dir):
@@ -87,16 +82,13 @@ def main():
         tif_files = []; tif_count = 0
 
 
-        ##UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+        ##uncomment this block if images are in subfolders:
         ##folder_dir = working_dir
-        ##IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        ##DIRECTORY
+        ##searches through subdirectories of input directory
         
         ## Saves the directory of the folder
         #folder_dir = os.path.join(working_dir, folder)
 
-        # The previous version of the script's subfolder IS this current
-        # version's working folder.
         folder_dir = working_dir
 
         # for each file inside of the folder...
