@@ -157,48 +157,39 @@ def main():
     # Gets the working directory from the console input
     working_dir = args_parser()
 
-    # Initializes an empty list to hold all of the relevant folders
-    # in the specified directory
-    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
-    # This makes it so the script searches for just images within
-    # the inputted directory
+    # Initializes an empty list for the directory of image files
     folders = [working_dir]
 
-
-    # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
+    # #uncomment this block if images are in subfolders:
     # #folders = [working_dir] to folders = []
-    # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    # #DIRECTORY
+    # #searches through subdirectories of input directory
     
-    # # for each file in the specified directory...
+    # # for each file/folder in the specified directory...
     # for file in os.listdir(working_dir):
-        # # if the file is NOT a folder
-        # if "." in file:
+        # # if there is a . or the file is named Output Files...
+        # if "." in file or file == 'Output Files':
+            # # ...don't do anything
             # continue
-        # # if the file is a folder...
+        # # else, append the file to the folders list
         # else:
-            # # append it to the folders list
             # folders.append(file)
 
-    # for each folder in the folders list...
-    for folder in folders:
+    # for each file in the folders list...
+    for file in folders:
         # Initialize variables to hold the atmcorr_regr.py output .txt and
         # the rad.tif image.
         # xml_file saves the name of the .xml file associated with the raw image
         avg_txt = ''
         rad_file = ''
         xml_file = ''
-
-        # #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        # #folder_dir = working_dir
-        # #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        # #DIRECTORY
         
-        # # Saves the directory of the folder
-        # folder_dir = os.path.join(working_dir, folder)
-
-        # The previous version of the script's subfolder IS this current
-        # version's working folder.
+        ##uncomment this block if images are in subfolders:
+        ##folder_dir = working_dir
+        ##searches through subdirectories of input directory
+        
+        ## Saves the directory of the folder
+        #folder_dir = os.path.join(working_dir, folder)
+        
         folder_dir = working_dir
 
         # Looks for an xml file in the image folder
