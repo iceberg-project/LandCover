@@ -3,10 +3,15 @@
 # License: Stony Brook University, Northern Arizona University
 # Copyright: 2018-2019
 
-# This script is a more generalized version of Brad Spitzbart's raw to radiance script.
+# This script is the first step of calibration and must precede all others.
+# It is only effective for Worldview-2 and -3 image files.
+
 # It searches through the console specified directory for raw .tif images and their
 # corresponding .xml files. If no .tif or .xml files exist in a folder,
 # the script will not run.
+
+# This script executes the WorldView instrument radiance calibration described by 
+# Updike & Comp, 2010 and Chander, Markham, and Helder, 2009.
 
 # The radiance image will be outputted in the same folder as the original raw image.
 
@@ -71,8 +76,8 @@ def main():
         # else:
             # folders.append(file)
 
-    # for each folder in the folders list...
-    for folder in folders:
+    # for each file in the folders list...
+    for file in folders:
         # Initialize a variable to save the name of the .xml file.
         # Initialize a variable to count the number of .xml files.
         xml_file = ''; xml_count = 0
