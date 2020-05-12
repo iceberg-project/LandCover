@@ -10,12 +10,12 @@ Each script requires the same single argument, -ip (or --input_dir), for the inp
 
 Additional packages needed:
 
--rasterio
--xml.etree.ElementTree
--argparse
--os
--numpy
--geopandas
--cv2
--re
--shapely.geometry
+-rasterio <br>
+-xml.etree.ElementTree <br>
+-argparse <br>
+-os <br>
+-numpy <br>
+-geopandas <br>
+-cv2 <br>
+-re <br>
+-shapely.geometry 
