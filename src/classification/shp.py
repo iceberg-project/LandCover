@@ -80,22 +80,38 @@ def main():
 
     # Finds the current directory and appends a new folder to be made
     working_dir = args_parser()
-
-    # Empty list holds all of the relevent folders in the directory
-    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
-    # This makes it so the script searches for just images within
-    # the inputted directory
+    
+    # Initializes an empty list for the directory of image files
     folders = [working_dir]
     
-     # for each folder in the specified directory...
-    for folder in folders:
+    # #uncomment this block if images are in subfolders:
+    # #folders = [working_dir] to folders = []
+    # #searches through subdirectories of input directory
+    
+    # # for each file/folder in the specified directory...
+    # for file in os.listdir(working_dir):
+        # # if there is a . or the file is named Output Files...
+        # if "." in file or file == 'Output Files':
+            # # ...don't do anything
+            # continue
+        # # else, append the file to the folders list
+        # else:
+            # folders.append(file)
+    
+     # for each file in the specified directory...
+    for file in folders:
         # Initialize a list to hold all of the corrected .tif images.
         # Initialize a varaible to count the number of corrected .tif files
         shp_ready_files = []
         shp_ready_count = 0
-
-        # Stores the subfolder directory
-        # folder_dir = os.path.join(working_dir, folder)
+        
+        ##uncomment this block if images are in subfolders:
+        ##folder_dir = working_dir
+        ##searches through subdirectories of input directory
+        
+        ## Saves the directory of the folder
+        #folder_dir = os.path.join(working_dir, folder)
+        
         folder_dir = folder
 
         # for each file in the subfolder...
