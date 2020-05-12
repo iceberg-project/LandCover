@@ -3,13 +3,21 @@
 # License: Stony Brook University, Northern Arizona University
 # Copyright: 2018-2019
 
-# This script is a more generalized version of Brad Spitzbart's reflectance
-# script. It searches through the folders in the console specified directory for
-# atmospherically corrected .tif images and their corresponding .xml files.
-# If no .tif or .xml files exist in a folder, the script will not run.
+# This script is the last step of calibration and must follow rad.py.
+# If a radiance image hasn't been atmospherically corrected, it will still run, but
+# the output will be top of atmosphere reflectance instead of surface reflectance.
+# It is only effective for Worldview-2 and -3 image files.
+
+# It searches through the console specified directory for rad_atmcorr.tif or rad.tif 
+# images and their corresponding .xml files. If no .tif or .xml files exist in a 
+# folder, the script will not run. The script will only process rad.tif if there is
+# no rad_atmcorr.tif file available.
+
+# This script executes the WorldView instrument reflectance calibration described  
+# by Updike & Comp, 2010 and Chander, Markham, and Helder, 2009.
 
 # The reflectance image will be outputted in the same folder as the
-# atmospherically corrected image.
+# atmospherically corrected image or radiance image.
 
 import xml.etree.ElementTree as ET
 import math
@@ -80,8 +88,8 @@ def main():
         # else:
             # folders.append(file)
 
-    # for each folder in the specified directory...
-    for folder in folders:
+    # for each file in the specified directory...
+    for file in folders:
         # Initialize a variable to save the name of the .xml file.
         # Initialize a variable to count the number of .xml files.
         xml_file = ''
