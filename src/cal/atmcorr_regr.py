@@ -3,20 +3,17 @@
 # License: NAU
 # Copyright: 2018-2019
 
-# This script is used to take in .txt files of atmospheric spectrographic data
-# in subfolders in order to calculate the atmospheric correction values needed.
+# This script will only be run if user has manually collected and saved spectra
+# from the image scene across a homogenous rock unit that transitions from sunlit
+# to shadow. Files must be saved as .txt files in the same directory as the image.
 
-# The output files will automatically be sent into the same folder as the analyzed .txt
-# files. The name of the output file will be NO_XML_PRESENT if there is no
-# .xml file associated with the image band data to base the name off of.
+# This script is used to take in .txt files of atmospheric spectrographic data
+# in the directory in order to calculate an atmospheric spectrum for removal.
+
+# The output files will automatically be sent into the same folder as the .txt
+# files. 
 
 # This script is safe to run multiple times in the same directory.
-
-# Change(s) from version 1.2 of atmcorr_regr.py:
-# - The input directory should now be the folder with the text file directly
-  # inside of it
-
-# Version 1.3
 
 # Imports the stats, argsparse, and os packages
 # The xml package is used to look into .xml files
