@@ -7,7 +7,7 @@ We present a Jupyter notebook as a demonstration of how to process high-resoluti
 This notebook is a simplification of Python code used for large scale processing on high performance computing (HPC) systems and can be extended for use on HPC and for non-Antarctic regions.
 <br>
 ### To run the notebook:
-  main.ipynb calls the other notebooks in the correct order.  It takes one argument, a directory path to the raw input imagery.<br>
+  main.ipynb calls the other notebooks in the correct order.  It takes one argument, a directory path to the raw input imagery.  It requests the following packages: rasterio, geopandas, cv2, numpy<br>
 ### A schematic of the entire pipeline:
 ![Image of pipeline](LandCover_pipeline.png?raw=true)
 ### An example shapefile output where orange=shadow/water, pink=snow/ice, and purple=sunlit geology (original image coming soon pending licensing approval):
