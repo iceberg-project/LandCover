@@ -95,14 +95,14 @@ class Seals(Executor):
         # Create a Pipeline object
         entk_pipeline = re.Pipeline()
         entk_pipeline.name = name
-        # Create a Stage object
+        # Preprocessing raw to radiance
         stage0 = re.Stage()
         stage0.name = '%s-S0' % (name)
-        # Create Task 1, training
+        # Create Task 1, raw to radiance
         task0 = re.Task()
         task0.name = '%s-T0' % stage0.name
         task0.pre_exec = pre_execs
-        task0.executable = 'iceberg_seals.tiling'  # Assign tak executable
+        task0.executable = 'rad.py'  # Assign tak executable
         # Assign arguments for the task executable
         task0.arguments = ['--input_image=%s' % image.split('/')[-1],
                            # This line points to the local filesystem of the
@@ -117,14 +117,14 @@ class Seals(Executor):
         # Add Stage to the Pipeline
         entk_pipeline.add_stages(stage0)
 
-        # Create a Stage object
+        # Option 1 atm_corr.py might need to skip 
         stage1 = re.Stage()
         stage1.name = '%s-S1' % (name)
         # Create Task 1, training
         task1 = re.Task()
         task1.name = '%s-T1' % stage1.name
         task1.pre_exec = pre_execs
-        task1.executable = 'iceberg_landcover.rad'  # Assign task executable
+        task1.executable = 'atmcorr_specmath.py'  # Assign task executable
         # Assign arguments for the task executable
         task1.arguments = ['--input_image', image.split('/')[-1],
                            (entk_pipeline.name, stage0.name,
@@ -135,28 +135,25 @@ class Seals(Executor):
         task1.cpu_reqs = {'processes': 1, 'threads_per_process': 1,
                           'process_type': None, 'thread_type': 'OpenMP'}
         # Download resuting images
-        task1.download_output_data = ['%s/ > %s' % (image.split('/')[-1].
-                                                    split('.')[0],
-                                                    image.split('/')[-1])]
         # task1.tag = task0.name
 
         stage1.add_tasks(task1)
         # Add Stage to the Pipeline
         entk_pipeline.add_stages(stage1)
 
-        # Create a Stage object
+        # Radiance to reflectance
         stage2 = re.Stage()
         stage2.name = '%s-S1' % (name)
         # Create Task 1, training
         task2 = re.Task()
         task2.name = '%s-T1' % stage1.name
         task2.pre_exec = pre_execs
-        task2.executable = 'iceberg_landcover.atmcorr'  # Assign task executable
+        task2.executable = 'refl.py'  # Assign task executable
         # Assign arguments for the task executable
         task2.arguments = ['--input_image', image.split('/')[-1],
                            (entk_pipeline.name, stage0.name,
                             task0.name, task0.name),
-                           '--output_folder', './%s' % image.split('/')[-1].
+                           '--output_file', './%s' % image.split('/')[-1].
                            split('.')[0]]
         #task1.link_input_data = ['$SHARED/%s' % self._model_name]
         task2.cpu_reqs = {'processes': 1, 'threads_per_process': 1,
@@ -171,14 +168,14 @@ class Seals(Executor):
         # Add Stage to the Pipeline
         entk_pipeline.add_stages(stage2)
 
-        # Create a Stage object
+        # Simple Classification
         stage3 = re.Stage()
         stage3.name = '%s-S1' % (name)
         # Create Task 1, training
         task3 = re.Task()
         task3.name = '%s-T1' % stage1.name
         task3.pre_exec = pre_execs
-        task3.executable = 'iceberg_landcover.refl'  # Assign task executable
+        task3.executable = 'class.py'  # Assign task executable
         # Assign arguments for the task executable
         task3.arguments = ['--input_image', image.split('/')[-1],
                            (entk_pipeline.name, stage3.name,
@@ -188,68 +185,41 @@ class Seals(Executor):
         #task1.link_input_data = ['$SHARED/%s' % self._model_name]
         task3.cpu_reqs = {'processes': 1, 'threads_per_process': 1,
                           'process_type': None, 'thread_type': 'OpenMP'}
-        # Download resuting images
-        task3.download_output_data = ['%s/ > %s' % (image.split('/')[-1].
-                                                    split('.')[0],
-                                                    image.split('/')[-1])]
+        if shapefile:
+            task3.post_exec = 'create a shape file and download'
         # task1.tag = task0.name
 
         stage3.add_tasks(task3)
-        # Add Stage to the Pipeline
-        entk_pipeline.add_stages(stage3)
 
-        # Create a Stage object
-        stage4 = re.Stage()
-        stage4.name = '%s-S1' % (name)
-        # Create Task 1, training
-        task4 = re.Task()
-        task4.name = '%s-T1' % stage1.name
-        task4.pre_exec = pre_execs
-        task4.executable = 'iceberg_landcover.classify'  # Assign task executable
-        # Assign arguments for the task executable
-        task4.arguments = ['--input_image', image.split('/')[-1],
-                           (entk_pipeline.name, stage4.name,
-                            task4.name, task4.name),
-                           '--output_folder', './%s' % image.split('/')[-1].
-                           split('.')[0]]
-        #task1.link_input_data = ['$SHARED/%s' % self._model_name]
-        task4.cpu_reqs = {'processes': 1, 'threads_per_process': 1,
-                          'process_type': None, 'thread_type': 'OpenMP'}
-        # Download resuting images
-        task4.download_output_data = ['%s/ > %s' % (image.split('/')[-1].
-                                                    split('.')[0],
-                                                    image.split('/')[-1])]
-        # task1.tag = task0.name
+        # TODO: Second Classification might need to be overriden based on user preference
+        # otherwise executed 
+        # if separate_features:
+        #     # Add a masking stage
+        #     stage4 = re.Stage()
+        #     stage4.name = '%s-S1' % (name)
+        #     # Seperate features with three tasks and add them to the same stage
+        #     task4 = re.Task()
+        #     task4.name = '%s-T1' % stage1.name
+        #     task4.pre_exec = pre_execs
+        #     task4.executable = 'class.py'  # Assign task executable
+        #     # Assign arguments for the task executable
+        #     task4.arguments = ['--input_image', image.split('/')[-1],
+        #                        (entk_pipeline.name, stage3.name,
+        #                         task3.name, task3.name),
+        #                         'type'
+        #                        '--output_folder', './%s' % image.split('/')[-1].
+        #                        split('.')[0]]
+        #     #task1.link_input_data = ['$SHARED/%s' % self._model_name]
+        #     task4.cpu_reqs = {'processes': 1, 'threads_per_process': 1,
+        #                       'process_type': None, 'thread_type': 'OpenMP'}
+        #     if shapefile:
+        #         task3.post_exec = 'create a shape file'
+        #     # task1.tag = task0.name
+        #
+        #    stage3.add_tasks(task3)
+        #    # Add Stage to the Pipeline
+        #    entk_pipeline.add_stages(stage3)
 
-        stage4.add_tasks(task4)
-        # Add Stage to the Pipeline
-        entk_pipeline.add_stages(stage4)
-
-        # Create a Stage object
-        stage5 = re.Stage()
-        stage5.name = '%s-S1' % (name)
-        # Create Task 1, training
-        task5 = re.Task()
-        task5.name = '%s-T1' % stage1.name
-        task5.pre_exec = pre_execs
-        task5.executable = 'iceberg_landcover.shapefiles'  # Assign task executable
-        # Assign arguments for the task executable
-        task5.arguments = ['--input_image', image.split('/')[-1],
-                           (entk_pipeline.name, stage4.name,
-                            task4.name, task4.name),
-                           '--output_folder', './%s' % image.split('/')[-1].
-                           split('.')[0]]
-        #task1.link_input_data = ['$SHARED/%s' % self._model_name]
-        task5.cpu_reqs = {'processes': 1, 'threads_per_process': 1,
-                          'process_type': None, 'thread_type': 'OpenMP'}
-        # Download resuting images
-        task5.download_output_data = ['%s/ > %s' % (image.split('/')[-1].
-                                                    split('.')[0],
-                                                    image.split('/')[-1])]
-        # task1.tag = task0.name
-
-        stage5.add_tasks(task5)
-        # Add Stage to the Pipeline
         entk_pipeline.add_stages(stage5)
 
         return entk_pipeline
