@@ -19,6 +19,8 @@ The script should be called from console and the inputted directory should
 contain the images, relevent .xml, etc that need to be processed
 """
 
+from glob import glob
+
 import os
 import argparse
 import xml.etree.ElementTree as ET
@@ -36,17 +38,20 @@ def args_parser():
     Return:
     Returns a directory that has the images to be analyzed within it
     """
-
     # Creates an ArgumentParser object to hold the console input
     parser = argparse.ArgumentParser()
     
     # Adds an argument to the parser created above. Holds the
     # inputted directory as a string
-    parser.add_argument('-ip', '--input_dir', type=str,
-                        help='The directory containing the images.')
+    parser.add_argument('-ip', '--input_dir', type=str, default='./',
+                        help=('The directory with the set of images'))
+    parser.add_argument('-op', '--output_dir', type=str, default='./',
+                        help=('The output directory'))
+    parser.add_argument('-t', '--atm_temp', type=str, default='',
+                        help=('The path to the atmospheric correction lookup table'))
 
     # Returns the passed in directory
-    return parser.parse_args().input_dir
+    return parser.parse_args()
 
 
 def avgs_finder(atmotxt_dir, missing_txt):
@@ -115,7 +120,7 @@ def avgs_finder(atmotxt_dir, missing_txt):
     return averages
 
 
-def spec_mather(rad_dir, averages, folder_dir):
+def spec_mather(rad_dir, averages):
     """
     Does the spectral band math to the image. A new image is created
     as a result, with its name being the name of the rad.tif image but
@@ -128,7 +133,6 @@ def spec_mather(rad_dir, averages, folder_dir):
     rad_dir    - the directory of the rad.tif image
     averages   - a list holding the average atmospheric correction values of
                  bands 1 through 7
-    folder_dir - the directory of the image's folder
     """
 
     # Opens the rad.tif image
@@ -164,134 +168,67 @@ def main():
     None
     """
 
-    # Gets the working directory from the console input
-    working_dir = args_parser()
+    # Saves the specified directory to a variable
+    args = args_parser()
+    path = os.path.realpath(__file__)
+    def_atmcorr = '/'.join([x for x in  path.split('/')[:-1]]) + \
+                  '/lib/atmcorr_temp.txt'
+    working_dir = args.input_dir
+    output_dir = args.output_dir
+    avg_txt = args.atm_temp
+    # Initialize variables to hold the atmcorr_regr.py output .txt and
+    # the rad.tif image.
+    # xml_file saves the name of the .xml file associated with the raw image
 
-    # Initializes an empty list to hold all of the relevant folders
-    # in the specified directory
-    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
-    # This makes it so the script searches for just images within
-    # the inputted directory
-    folders = [working_dir]
+    image_files = glob(os.path.join(working_dir + '*_rad.tif'))
 
-    """
 
-    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-    #folders = [working_dir] to folders = []
-    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    #DIRECTORY
-    
-    # for each file in the specified directory...
-    for file in os.listdir(working_dir):
-        # if the file is NOT a folder
-        if "." in file:
-            continue
-        # if the file is a folder...
-        else:
-            # append it to the folders list
-            folders.append(file)
-    """
-
-    # for each folder in the folders list...
-    for folder in folders:
-        # Initialize variables to hold the atmcorr_regr.py output .txt and
-        # the rad.tif image.
-        # xml_file saves the name of the .xml file associated with the raw image
-        avg_txt = ''
-        rad_file = ''
-        xml_file = ''
-
-        """
-
-        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        #folder_dir = working_dir
-        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        #DIRECTORY
+    # For each file in the folder...
+    for image_file in image_files:
+        # if the file is a rad.tif image that doesn't contain
+        # P1BS, save it
         
-        # Saves the directory of the folder
-        folder_dir = os.path.join(working_dir, folder)
-        """
+        if ('P1BS') not in file:
+            rad_file = image_file
+        else:
+            continue
+    # Checks to see if the specmath.tif image exists
+        specmath_file_exists = os.path.isfile(os.path.join(working_dir,
+                                    rad_file.replace('.tif', '_atmcorr.tif')))
 
-        # The previous version of the script's subfolder IS this current
-        # version's working folder.
-        folder_dir = working_dir
-
-        # Looks for an xml file in the image folder
-        for file in os.listdir(folder_dir):
-            if file.endswith('.xml'):
-                xml_file = file
-
-        # Placeholder atmcorr_regr.py file output name if there was no
-        # xml file when it was run
-        file_name = 'NO_XML_PRESENT'
-
-        # If there is an xml file, then the atmcorr_regry.py file has
-        # a specific name, which was determined by the source image
-        # name in the xml
-        if xml_file != '':
-            # Look into the xml for a branch called SOURCE_IMAGE
-            tree = ET.parse(os.path.join(folder_dir, xml_file))
-            root = tree.getroot()
-            rt = root[1].find('SOURCE_IMAGE').text
-
-            # And lop off some stuff for the atmcorr_regr.py output name
-            file_name = rt[5:19]
-
-        # For each file in the folder...
-        for file in os.listdir(folder_dir):
-            # if the file is a rad.tif image that doesn't contain
-            # P1BS, save it
-            if file.endswith('rad.tif') and ('P1BS') not in file:
-                rad_file = file
-            # if the file is the output .txt from atmcorr_regr.py,
-            # save it
-            elif file == file_name + '.txt':
-                avg_txt = file
-            # else continue
-            else:
-                continue
-        # Checks to see if the specmath.tif image exists
-        specmath_file_exists = os.path.isfile(os.path.join(folder_dir,
-                                                           rad_file.replace('.tif', '_atmcorr.tif')))
-
-        # If the specmath.tif image doesn't exist, create it
+    # If the specmath.tif image doesn't exist, create it
         if not specmath_file_exists and avg_txt != '':
             # Saves the directory of the atmcorr_regr.py file
-            atmotxt_dir = os.path.join(folder_dir, file_name + '.txt')
+            # atmotxt_dir = os.path.join(working_dir, file_name + '.txt')
             # Calls avgs_finder to retrieve the averages from the file
-            averages = avgs_finder(atmotxt_dir, False)
+            averages = avgs_finder(avg_txt, False)
             # Saves the directory of the rad.tif image
-            rad_dir = os.path.join(folder_dir, rad_file)
+            rad_dir = os.path.join(output_dir, rad_file)
             # Calls spec_mather to do the band math and write
             # it to the new file
-            spec_mather(rad_dir, averages, folder_dir)
+            spec_mather(rad_dir, averages)
 
             print(rad_file + ' has been processed!')
 
         elif specmath_file_exists:
             print(rad_file.replace('.tif', '_atmcorr.tif') + ' already exists!')
 
-        # Script does nothing if there isn't any radiance images
-        elif rad_file == '':
-            print('There are no radiance images in ' +
-                  folder_dir + '!')
-
         # If the output text file from atmcorr_regr.py doesn't exist in the
         # specified directory, use the values in atmcorr_temp.txt in lib
         # instead
         elif avg_txt == '':
             print('atmcorr_regr.py has not been run yet in the directory or ' +
-                  'its output file is missing. Using the temporary ' +
-                  'spectra values...')
+                    'its output file is missing. Using the temporary ' +
+                    'spectra values...')
             # Uses the file containing the temporary spectra instead
-            atmotxt_temp = '../lib/atmcorr_temp.txt'
+            # atmotxt_temp = '../lib/atmcorr_temp.txt'
             # Calls avgs_finder to retrieve the averages from the file
-            averages = avgs_finder(atmotxt_temp, True)
+            averages = avgs_finder(def_atmcorr, True)
             # Saves the directory of the rad.tif image
-            rad_dir = os.path.join(folder_dir, rad_file)
+            rad_dir = os.path.join(output_dir, rad_file)
             # Calls spec_mather to do the band math and write
             # it to the new file
-            spec_mather(rad_dir, averages, folder_dir)
+            spec_mather(rad_dir, averages)
 
 
 if __name__ == '__main__':
