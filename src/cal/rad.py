@@ -91,7 +91,7 @@ def main():
         if not rad_file_exists:
             xml_file = f.replace('.tif','.xml')
 
-            if not os.path.isfile(working_dir, xml_file):
+            if not os.path.isfile(os.path.join(working_dir, xml_file)):
                 print('XML: ', xml_file, 'does not exist')
                 break
 
@@ -150,9 +150,9 @@ def main():
 
             print(f + ' has been processed.')
             src.close()
-            # If the rad.tif file already exists, print out a message saying so
-            elif rad_file_exists:
-                print(f.replace('.tif', '_rad.tif') + ' already exists!')
+        # If the rad.tif file already exists, print out a message saying so
+        elif rad_file_exists:
+            print(f.replace('.tif', '_rad.tif') + ' already exists!')
 
 # If the script was directly called, run the script
 if __name__ == '__main__':
