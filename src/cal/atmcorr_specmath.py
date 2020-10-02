@@ -171,7 +171,7 @@ def main():
     # Saves the specified directory to a variable
     args = args_parser()
     path = os.path.realpath(__file__)
-    def_atmcorr = '/'.join([x for x in  path.split('/')[:-1]]) + \
+    def_atmcorr = '/'.join([x for x in  path.split('/')[:-2]]) + \
                   '/lib/atmcorr_temp.txt'
     working_dir = args.input_dir
     output_dir = args.output_dir
@@ -188,7 +188,7 @@ def main():
         # if the file is a rad.tif image that doesn't contain
         # P1BS, save it
         
-        if ('P1BS') not in file:
+        if ('P1BS') not in image_file:
             rad_file = image_file
         else:
             continue
