@@ -189,11 +189,11 @@ def main():
         # P1BS, save it
         
         if ('P1BS') not in image_file:
-            rad_file = image_file
+            rad_file = image_file.split('/')[-1]
         else:
             continue
     # Checks to see if the specmath.tif image exists
-        specmath_file_exists = os.path.isfile(os.path.join(working_dir,
+        specmath_file_exists = os.path.isfile(os.path.join(output_dir,
                                     rad_file.replace('.tif', '_atmcorr.tif')))
 
     # If the specmath.tif image doesn't exist, create it
@@ -206,7 +206,7 @@ def main():
             rad_dir = os.path.join(output_dir, rad_file)
             # Calls spec_mather to do the band math and write
             # it to the new file
-            spec_mather(input_dir, output_dir, rad_file, averages)
+            spec_mather(working_dir, output_dir, rad_file, averages)
 
             print(rad_file + ' has been processed!')
 
@@ -228,7 +228,7 @@ def main():
             #rad_dir = os.path.join(input_dir, output_dir, rad_file)
             # Calls spec_mather to do the band math and write
             # it to the new file
-            spec_mather(input_dir, output_dir, rad_file, averages)
+            spec_mather(working_dir, output_dir, rad_file, averages)
 
 
 if __name__ == '__main__':
