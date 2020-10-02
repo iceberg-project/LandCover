@@ -120,7 +120,7 @@ def avgs_finder(atmotxt_dir, missing_txt):
     return averages
 
 
-def spec_mather(rad_dir, averages):
+def spec_mather(input_dir, output_dir, rad_file, averages):
     """
     Does the spectral band math to the image. A new image is created
     as a result, with its name being the name of the rad.tif image but
@@ -136,13 +136,13 @@ def spec_mather(rad_dir, averages):
     """
 
     # Opens the rad.tif image
-    src = rasterio.open(rad_dir)
-
+    src = rasterio.open(input_dir + rad_file)
+    
     # Gets the metadata of the image
     meta = src.meta
 
     # Creates the specmath.tif image to be written onto
-    with rasterio.open(rad_dir.replace('.tif', '_atmcorr.tif'),
+    with rasterio.open(output_dir + rad_file.replace('.tif', '_atmcorr.tif'),
                        'w', **meta) as dst:
         # for bands 1 through 7...
         for i in range(7):
@@ -154,7 +154,7 @@ def spec_mather(rad_dir, averages):
         dst.write_band(8, np.float32(src.read(8)))
 
     # Close the file
-    dst.close
+    src.close()
 
 
 def main():
@@ -206,7 +206,7 @@ def main():
             rad_dir = os.path.join(output_dir, rad_file)
             # Calls spec_mather to do the band math and write
             # it to the new file
-            spec_mather(rad_dir, averages)
+            spec_mather(input_dir, output_dir, rad_file, averages)
 
             print(rad_file + ' has been processed!')
 
@@ -225,10 +225,10 @@ def main():
             # Calls avgs_finder to retrieve the averages from the file
             averages = avgs_finder(def_atmcorr, True)
             # Saves the directory of the rad.tif image
-            rad_dir = os.path.join(output_dir, rad_file)
+            #rad_dir = os.path.join(input_dir, output_dir, rad_file)
             # Calls spec_mather to do the band math and write
             # it to the new file
-            spec_mather(rad_dir, averages)
+            spec_mather(input_dir, output_dir, rad_file, averages)
 
 
 if __name__ == '__main__':
