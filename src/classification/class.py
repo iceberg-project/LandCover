@@ -41,9 +41,6 @@ def args_parser():
     # Returns the passed in directory
     return parser.parse_args()
 
-
-
-@profile
 def main():
     """
     Main function. Searches all of the folders within the specified directory 
@@ -89,11 +86,6 @@ def main():
             class_ready_count += 1
         else:
             continue
-
-    # A remnant of where the script saved the newly processed images.
-    # Easier and safer to just set it equal to the new place to be saved
-    # to.
-    output_dir = folder_dir
 
     # If there was an xml and at least one corrected image detected...
     if xml_count != 0 and class_ready_count != 0:
