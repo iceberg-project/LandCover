@@ -23,7 +23,8 @@ import rasterio
 
 # Imports a dictionary containing the Earth-Sun distance in AU depending
 # on the date.
-from ..lib.earth_sun_dist import date_distance
+sys.path.insert(0, "./..")
+from lib.earth_sun_dist import date_distance
 
 def args_parser():
     """
@@ -63,7 +64,7 @@ def main():
     Return:
     None
     """
-
+    args = args_parser()
     # Finds the current directory and appends a new folder to be made
     working_dir = args.input_dir
     output_dir = args.output_dir
@@ -135,10 +136,10 @@ def main():
             # If it wasn't processed...
             if not refl_file_exists:
                 
-                tree = ET.parse(os.path.join(working_dir, folder, xml_file))
+                tree = ET.parse(os.path.join(working_dir, working_dir, xml_file))
                 root = tree.getroot()
                 
-                src = rasterio.open(os.path.join(working_dir, folder, f2))
+                src = rasterio.open(os.path.join(working_dir, working_dir, f2))
                 meta = src.meta
                 # Update meta to float64
                 meta.update({"driver": "GTiff",
