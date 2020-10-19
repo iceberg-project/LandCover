@@ -213,8 +213,6 @@ def main():
     # saying so
     elif refl_ready_count == 0:
         print('There are no corrected .tif images in ' + folder + '!')
-    else:
-        continue
     
 # If the script was directly called, start it
 if __name__ == '__main__':
