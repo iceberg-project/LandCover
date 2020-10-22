@@ -118,17 +118,23 @@ def endmember_finder(band_data, spect_arr, run_count):
     Return:
     Returns two arrays. The first contains the abundances of the endmembers
     in each run. run x endmember abundance. The second contains the indices
-    of those endmembers. run x endmember
+    of those endmembers. run x endmember. Also returns the band RMS values and
+    the total RMS value of each run
     """
 
-    # Keeps track of the sample used in each endmember extraction run
+    # Keeps track of the sample used of each endmember extraction run
     index_list = []
 
-    # Keeps track of the abundances in each run
+    # Keeps track of the abundances of each run
     abundances = []
+
+    # Keeps track of the band and total RMS values of each run
+    abund_total_rms = []
+    abund_band_rms = []
 
     # In each run...
     for i in range(run_count):
+        
         # A temporary list to store the indices of samples
         temp_list = []
 
@@ -163,28 +169,78 @@ def endmember_finder(band_data, spect_arr, run_count):
 
         # Gets the abundances from this particular set of endmembers
         temp_abun = amaps.NNLS(band_data, temp_endm)
+        
         # Stores the abundances in the list
         abundances.append(temp_abun)
 
+        # Finds the RMS values between the bands and the total RMS value
+        # of all of the bands put together
+        (band_rms, total_rms) = rms_finder(temp_endm, temp_abun, band_data)
+
+        # Adds the RMS values to their respective lists
+        abund_total_rms.append(total_rms)
+        abund_band_rms.append(band_rms)
+
+    # Turns the RMS lists into arrays
+    abund_band_rms = np.array(abund_band_rms)
+    abund_total_rms = np.array(abund_total_rms)
+
+    # Returns the abundances, indices, and RMS values
+    return (abundances, index_list, abund_band_rms, abund_total_rms)
+
+def rms_finder(endm_arr, abundances, band_data):
     """
-    Visualization stuff. Unblock if band 1 comparison of the first pixel is
-    needed between the actual data and the sum of extracted endmembers
-    print(abundances[0][0])
-    print(band_data[0])
-    new = []
-    for i in index_list:
-        new.append(spect_arr[i])
-    new = np.array(new)
-    print(new)
-    der = new.transpose()[0].transpose() * abundances[0][0]
-    print(der)
-    print(der.sum())
-    input()
+    Finds the RMS values of the output abundances.
+
+    Parameters:
+    endm_arr   - an array containing the band data of the eight
+                 endmembers that were chosen to be in the extraction process
+    abundances - an array containing the abundances of the above eight
+                 endmembers in each pixel
+    band_data  - the measured data in each band in the image
+
+    Return:
+    Returns two different RMS values. One contains the RMS values between each
+    band. The other contains the overall image RMS value.
     """
 
-    # Returns the abundance and index lists
-    return (abundance, index_list)
+    # Holds all of the modelled band data
+    modelled_bands = []
 
+    # For each pixel's calculated abundances...
+    for pixel_abund in abundances:
+
+        # Temporarily holds the modelled band data pulled out of the
+        # abundances and endmember band data
+        temp_arr = []
+
+        # For each endmember's abundance...
+        for i in range(len(pixel_abund)):
+            # Multiply the abundance to the related endmember's band data
+            temp_arr.append(pixel_abund[i] * endm_arr[i])
+
+        # Sum the numbers bandwise. So only 8 values, one value per band, is
+        # left behind. This is the modelled band of the pixel
+        temp_arr = np.sum(np.array(temp_arr), axis=1)
+
+        # Append the modelled band
+        modelled_bands.append(temp_arr)
+
+    # Gets the square of the difference between the measured band data and
+    # the modelled band data
+    diff_sq_arr =  np.square(band_data - modelled_bands)
+
+    # Gets the number of pixels in the image
+    pixel_n = band_data.shape[0]
+
+    # Calculates the RMS value of each band
+    band_rms = np.sqrt(1/pixel_n * np.sum(diff_sq_arr, axis=1))
+
+    # Calculates the RMS value of the entire image
+    total_rms = np.sqrt(1/(8*pixel_n) * np.sum(diff_sq_arr))
+
+    # Returns the band and image RMS values
+    return (band_rms, total_rms)
 
 def band_extractor(image_dir):
     """
@@ -221,8 +277,8 @@ def band_extractor(image_dir):
     src.close()
 
     # At this point, the data is now in a 2D array that looks like this:
-    # [[1st pixel, 2nd pixel, 3rd pixel, ... nth pixel], \\1st band
-    #  [1st pixel, 2nd pixel, 3rd pixel, ... nth pixel], \\2nd band
+    # [[1st pixel, 2nd pixel, 3rd pixel, ... nth pixel], //1st band
+    #  [1st pixel, 2nd pixel, 3rd pixel, ... nth pixel], //2nd band
     #   ...
     # This was done by combining the rows together so that the first pixel
     # of the next row is right next to the last pixel of the current row
@@ -242,7 +298,7 @@ def main():
     #(working_dir, run_count) = args_parser()
 
     working_dir = 'C:/Users/Brian/Documents/Salvatore Research/test_image'
-    run_count = 1
+    run_count = 5
 
     # A list that contains all of the "_class" .tif files
     class_files = []
@@ -271,9 +327,25 @@ def main():
             if not endmember_exist:
                 # The file address of the image
                 image_dir = os.path.join(working_dir, image)
+                # Gets the image's band data and dimensions
                 (band_data, image_dim) = band_extractor(image_dir)
-                (abundance, index_list) = endmember_finder(band_data, spect_arr,
-                                                           run_count)
+
+                # Gets the abundances, the endmembers used (in the form of indices),
+                # and the band and image RMS values
+                (abundances, index_list,
+                 abund_band_rms, abund_total_rms) = endmember_finder(band_data,
+                                                                     spect_arr,
+                                                                     run_count)
+                # Gets the sorted indices
+                sorted_ind = np.argsort(abund_total_rms)
+
+                # Uses it to sort the abundances based on run
+                temp_abund = []
+                for ind in sorted_ind:
+                    temp_abund.append(abundances[ind])
+
+                # Just overwrites the old abundances array with the sorted one
+                abundances = temp_abund
                 
 
             else:
