@@ -38,11 +38,13 @@ def args_parser():
                                      'containing the set of raw images')
 
     # Attaches the passed in directory to the variable input_dir and sets it as a string
-    parser.add_argument('-ip', '--input_dir', type=str, help=('The directory ' +
-                                       'with the set of images'))
+    parser.add_argument('-ip', '--input_dir', type=str, default='./',
+                        help=('The directory with the set of images'))
+    parser.add_argument('-op', '--output_dir', type=str, default='./',
+                        help=('The output directory'))
 
     # Returns the directory
-    return parser.parse_args().input_dir
+    return parser.parse_args()
 
 def main():
     """
@@ -58,154 +60,99 @@ def main():
     """
 
     # Saves the specified directory to a variable
-    working_dir = args_parser()
+    args = args_parser()
 
-    # Initializes an empty list to hold all of the relevant folders
-    # containing images
-    # !!!NEW CHANGE!!!: Now puts the inputted directory into the folders list.
-    # This makes it so the script searches for just images within
-    # the inputted directory
-    folders = [working_dir]
+    working_dir = args.input_dir
+    output_dir = args.output_dir
 
-    """
+    # Initialize a list to hold all of the raw .tif images.
+    # Initialize a varaible to count the number of .tif files
+    tif_files = []
 
-    #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-    #folders = [working_dir] to folders = []
-    #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-    #DIRECTORY
-    
-    # for each file/folder in the specified directory...
-    for file in os.listdir(working_dir):
-        # if there is a . or the file is named Output Files...
-        if "." in file or file == 'Output Files':
-            # ...don't do anything
-            continue
-        # else, append the file to the folders list
-        else:
-            folders.append(file)
-    """
+    # The previous version of the script's subfolder IS this current
+    # version's working folder.
 
-    # for each folder in the folders list...
-    for folder in folders:
-        # Initialize a variable to save the name of the .xml file.
-        # Initialize a variable to count the number of .xml files.
-        xml_file = ''; xml_count = 0
+    # for each file inside of the folder...
+    for image_file in os.listdir(working_dir):
+        # if the image is a raw image...
+        if (image_file.endswith('.tif') and ('rad' not in image_file)
+            and ('atmcorr' not in image_file) 
+            and ('refl' not in image_file)
+            and ('P1BS' not in image_file)):
+            # ...append it to the list of raw images
+            tif_files.append(image_file)
 
-        # Initialize a list to hold all of the raw .tif images.
-        # Initialize a varaible to count the number of .tif files
-        tif_files = []; tif_count = 0
+    # for each .tif file in the folder...
+    for f in tif_files:
+        # Sees if an output file for the raw image being analyzed exists...
+        rad_file_exists = os.path.isfile(os.path.join(working_dir, f.replace('.tif', '_rad.tif')))
 
-        """
+        # If the radiance image doesn't exist, use Spitzbart's script to make one
+        if not rad_file_exists:
+            xml_file = f.replace('.tif','.xml')
 
-        #UNCOMMENT THIS BLOCK AND REMOVE CHANGE:
-        #folder_dir = working_dir
-        #IN ORDER TO SEARCH THROUGH THE SUBDIRECTORIES OF THE INPUTTED
-        #DIRECTORY
-        
-        # Saves the directory of the folder
-        folder_dir = os.path.join(working_dir, folder)
-        """
+            if not os.path.isfile(os.path.join(working_dir, xml_file)):
+                print('XML: ', xml_file, 'does not exist')
+                break
 
-        # The previous version of the script's subfolder IS this current
-        # version's working folder.
-        folder_dir = working_dir
+            tree=ET.parse(os.path.join(working_dir, xml_file))
+            root = tree.getroot()
 
-        # for each file inside of the folder...
-        for file in os.listdir(folder_dir):
-            # if the image is a raw image...
-            if (file.endswith('.tif') and ('rad' not in file)
-                and ('atmcorr' not in file) 
-                and ('refl' not in file)
-                and ('P1BS' not in file)):
-                # ...append it to the list of raw images
-                tif_files.append(file)
-                # ...and add 1 to the .tif count
-                tif_count += 1
-            # if the file is a .xml file...
-            elif file.endswith('.xml') and ('P1BS' not in file):
-                # ...save the file to be used
-                xml_file = file
-                # ...and add 1 to the .xml count
-                xml_count += 1
-            else:
-                continue
-    
-        # If there are .xml and .tif files...
-        if xml_count != 0 and tif_count != 0:
-            # for each .tif file in the folder...
-            for f in tif_files:
-                # Sees if an output file for the raw image being analyzed exists...
-                rad_file_exists = os.path.isfile(os.path.join(folder_dir, f.replace('.tif', '_rad.tif')))
+            # collect image metadata
+            bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
 
-                # If the radiance image doesn't exist, use Spitzbart's script to make one
-                if not rad_file_exists:
-                    tree=ET.parse(os.path.join(folder_dir, xml_file))
-                    root = tree.getroot()
+            src = rasterio.open(os.path.join(working_dir, f))
+            meta = src.meta
+            rt = root[1][2].find('IMAGE')
+            satid = rt.find('SATID').text
+            
+            # gain correction values
+            if satid == 'WV02':
+                gain = [1.151,0.988,0.936,0.949,0.952,0.974,0.961,1.002] # WV02
+            if satid == 'WV03':
+                gain = [0.905,0.940,0.938,0.962,0.964,1.000,0.961,0.978] # WV03
+            
+            #offset correction values
+            if satid == 'WV02':
+                offset = [-7.478,-5.736,-3.546,-3.564,-2.512,-4.120,-3.300,-2.891] # WV02
+            if satid == 'WV03':
+                offset = [-8.604,-5.809,-4.996,-3.649,-3.021,-4.521,-5.522,-2.992] # WV03
+            
+            # Update meta to float64
+            meta.update({"driver": "GTiff",
+                "compress": "LZW",
+                "count": "8",
+                "dtype": "float32",
+                "bigtiff": "YES",
+                "nodata": 255})
 
-                    # collect image metadata
-                    bands = ['BAND_C','BAND_B','BAND_G','BAND_Y','BAND_R','BAND_RE','BAND_N','BAND_N2']
+            # Creates the rad.tif file to be written into
+            with rasterio.open(os.path.join(output_dir, f.replace('.tif', '_rad.tif')),
+                                'w', **meta) as dst:
+                i = 0
 
-                    src = rasterio.open(os.path.join(folder_dir, f))
-                    meta = src.meta
-                    rt = root[1][2].find('IMAGE')
-                    satid = rt.find('SATID').text
-                    
-                    # gain correction values
-                    if satid == 'WV02':
-                        gain = [1.151,0.988,0.936,0.949,0.952,0.974,0.961,1.002] # WV02
-                    if satid == 'WV03':
-                        gain = [0.905,0.940,0.938,0.962,0.964,1.000,0.961,0.978] # WV03
-                    
-                    #offset correction values
-                    if satid == 'WV02':
-                        offset = [-7.478,-5.736,-3.546,-3.564,-2.512,-4.120,-3.300,-2.891] # WV02
-                    if satid == 'WV03':
-                        offset = [-8.604,-5.809,-4.996,-3.649,-3.021,-4.521,-5.522,-2.992] # WV03
-                    
-                    # Update meta to float64
-                    meta.update({"driver": "GTiff",
-                        "compress": "LZW",
-                        "count": "8",
-                        "dtype": "float32",
-                        "bigtiff": "YES",
-                        "nodata": 255})
+                # The commented out print statements were a part of Spitzbart's
+                # script. If they are needed, they can be commented back in -Brian
+                for band in bands:
+                    rt = root[1][2].find(band)
+                    # collect band metadata
+                    abscalfactor = np.float32(rt.find('ABSCALFACTOR').text)
+                    effbandwidth = np.float32(rt.find('EFFECTIVEBANDWIDTH').text)
 
-                    # Creates the rad.tif file to be written into
-                    with rasterio.open(os.path.join(folder_dir, f.replace('.tif', '_rad.tif')),
-                                       'w', **meta) as dst:
-                        i = 0
+                    # print(bands[i])
+                    # print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
 
-                        # The commented out print statements were a part of Spitzbart's
-                        # script. If they are needed, they can be commented back in -Brian
-                        for band in bands:
-                            rt = root[1][2].find(band)
-                            print(type(rt))
-                            # collect band metadata
-                            abscalfactor = np.float32(rt.find('ABSCALFACTOR').text)
-                            effbandwidth = np.float32(rt.find('EFFECTIVEBANDWIDTH').text)
+                    ### Read each layer and write it to stack
+                    rad = np.float32(gain[i])*src.read(i + 1)*(abscalfactor/effbandwidth)+np.float32(offset[i])
+                    #print(rad[0,0],rad.dtype)
+                    dst.write_band(i + 1, rad)
+                    i += 1
 
-                            # print(bands[i])
-                            # print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
-
-                            ### Read each layer and write it to stack
-                            rad = np.float32(gain[i])*src.read(i + 1)*(abscalfactor/effbandwidth)+np.float32(offset[i])
-                            #print(rad[0,0],rad.dtype)
-                            dst.write_band(i + 1, rad)
-                            i += 1
-                    dst.close()
-                    print(f + ' has been processed.')
-
-                # If the rad.tif file already exists, print out a message saying so
-                elif rad_file_exists:
-                    print(f.replace('.tif', '_rad.tif') + ' already exists!')
-        # If there are no .xml files, print out a message saying so
-        elif xml_count == 0:
-            print('There are no .xml files in ' + folder + '!')
-        # If there are no raw .tif files to be analyzed, print out a message saying so
-        elif tif_count == 0:
-            print('There are no raw .tif images in ' + folder + '!')
-        else:
-            continue
+            print(f + ' has been processed.')
+            src.close()
+        # If the rad.tif file already exists, print out a message saying so
+        elif rad_file_exists:
+            print(f.replace('.tif', '_rad.tif') + ' already exists!')
 
 # If the script was directly called, run the script
 if __name__ == '__main__':
