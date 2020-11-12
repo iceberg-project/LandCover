@@ -47,6 +47,7 @@ def args_parser():
     # Returns the passed in directory
     return (parser.parse_args().input_dir, parser.parse_args().run_count)
 
+
 def endmember_reader(working_dir):
     """
     Reads the .txt file containing the possible geologic endmembers. 
@@ -104,21 +105,80 @@ def endmember_reader(working_dir):
     # Returns the two arrays
     return (name_arr, spect_arr)
 
-def endmember_finder(band_data, spect_arr, run_count):
+
+def categorizer(name_arr, spect_arr):
+    """
+    Categorizes the Polar Rock Repository samples into eight categories
+    to be used in the endmember extraction process. Each category will
+    have one endmember randomly drawn from it for the endmember extraction
+    process.
+
+    Parameters:
+    name_arr  - an array containing the labels of the the samples
+    spect_arr - an array containing the band data of the samples.
+                Its indices correspond with the labels in name_arr
+
+    Return:
+    Returns two arrays. The first contains the associated categorized
+    sample labels. The second contains the categorized sample band data.
+    """
+
+    # Pulls out the number of samples in the PRR
+    spect_size = spect_arr.shape[0]
+
+    # A dictionary containing the categories for PRR samples to be
+    # split up into. EDIT THE LISTS IF DIFFERENT CATEGORIZATION IS NEEDED
+    cat_dict = {0:[],
+                1:[],
+                2:[],
+                3:[],
+                4:[],
+                5:[],
+                6:[],
+                7:[]}
+
+    # The output, categorized arrays. Will be turned into
+    # numpy arrays later
+    name_cat = [[],[],[],[],[],[],[],[]]
+    spect_cat = [[],[],[],[],[],[],[],[]]
+
+    # For each category...
+    for i in range(8):
+        
+        # Get the specific category...
+        category = cat_dict[i]
+
+        # For each sample...
+        for j in range(spect_size):
+
+            # If the rock type of the sample is in the category...
+            if name_arr[j] in category:
+
+                # Put the sample's band data and its labels into the
+                # current category's respective lists (name and spect)
+                name_cat[i].append(name_arr[j])
+                spect_cat[i].append(spect_arr[j])
+        
+
+    return (name_cat, spect_cat)
+
+
+def endmember_finder(band_data, spect_cat, run_count):
     """
     Reads the .txt file containing the possible geologic endmembers. 
     Parameters:
     band_data - an array containing the band data collected from satellite
                 imagery. pixel x band
-    spect_arr - an array containing the band data collected from ground
-                samples. endmember x band
+    spect_cat - an array containing the band data collected from ground
+                samples. category x endmember x band
     run_count - the number of times to run the pysptools endmember
                 extraction function, with each time using a different
                 set of 8 endmembers
     Return:
     Returns two arrays. The first contains the abundances of the endmembers
     in each run. run x endmember abundance. The second contains the indices
-    of those endmembers. run x endmember. Also returns the band RMS values and
+    of those endmembers. run x endmember. KEEP IN MIND THAT EACH INDEX
+    CORRESPONDS TO ITS OWN CATEGORY. Also returns the band RMS values and
     the total RMS value of each run
     """
 
@@ -138,6 +198,8 @@ def endmember_finder(band_data, spect_arr, run_count):
         # A temporary list to store the indices of samples
         temp_list = []
 
+
+        """
         # While there aren't eight endmembers to use in the endmember
         # extraction function...
         while len(temp_list) != 8:
@@ -153,12 +215,40 @@ def endmember_finder(band_data, spect_arr, run_count):
             if len(temp_list) == 8 and temp_list in index_list:
                 # Empty the list and start over
                 temp_list = []
+        """
+
+        while len(temp_list) != 8:
+            # For each category to pull the endmembers from...
+            for categ in spect_cat:
+                
+                # Get the index of a endmember in the category...
+                rand_n = random.randrange(0, categ.shape[0])
+
+                # And add the index to the temporary list
+                temp_list.append(rand_n)
+            
+            # If the endmember index list matches a previously used one...
+            if len(temp_list) == 8 and temp_list in index_list:
+                
+                # Empty the list and start over
+                temp_list = []
+            
 
         # A temporary list to store the band data of the chosen samples
         temp_endm = []
+
+        """
         # For each sample, store the band data in the list
         for index in temp_list:
             temp_endm.append(spect_arr[index])
+        """
+
+        # For each category...
+        for i in range(len(temp_list)):
+
+            # Append the randomly chosen, appropriate endmember to
+            # temporary endmember list
+            temp_endm.append(spect_cat[i][temp_list[i]])
 
         # Turns the list into a numpy array to be put into the pysptools
         # function
@@ -187,6 +277,7 @@ def endmember_finder(band_data, spect_arr, run_count):
 
     # Returns the abundances, indices, and RMS values
     return (abundances, index_list, abund_band_rms, abund_total_rms)
+
 
 def rms_finder(endm_arr, abundances, band_data):
     """
@@ -242,6 +333,7 @@ def rms_finder(endm_arr, abundances, band_data):
     # Returns the band and image RMS values
     return (band_rms, total_rms)
 
+
 def band_extractor(image_dir):
     """
     Extracts the band data from the image at the given file address.
@@ -292,9 +384,29 @@ def band_extractor(image_dir):
     # Returns the band data and image dimensions
     return (band_data, image_dim)
 
+def abundance_writer(image_dir, image_dim, band_data, abundances):
+    """
+    Writes eight new bands into the passed in image. These bands
+    are essentially true/false (1/0) for each of the eight rock
+    categories existing. The thresholding for whether or not a rock
+    category exists is also held in here.
+
+    Parameters:
+    image_dir  -
+    image_dim  -
+    band_data  -
+    abundances -
+
+    Return:
+    None
+    """
+
+
 
 def main():
-    
+
+    # Gets the working directory and the number of times for the endmembers
+    # to be randomly chosen
     #(working_dir, run_count) = args_parser()
 
     working_dir = 'C:/Users/Brian/Documents/Salvatore Research/test_image'
@@ -304,19 +416,20 @@ def main():
     class_files = []
     # Keeps track of the number of the "_class" files
     class_count = 0
-    
+
+    # Finds all of the ..._class.tif image filess in the directory
     for file in os.listdir(working_dir):
         if (file.endswith('_class.tif')):
             class_files.append(file)
             class_count += 1
-        else:
-            continue
 
     # If the class file does not exist...
     if class_count != 0:
 
         # Extract the downsampled PRR samples as potential endmembers
         (name_arr, spect_arr) = endmember_reader(working_dir)
+
+        (name_cat, spect_cat) = categorizer(name_arr, spect_arr)
         
         # For each detected _class.tif image file...
         for image in class_files:
@@ -334,7 +447,7 @@ def main():
                 # and the band and image RMS values
                 (abundances, index_list,
                  abund_band_rms, abund_total_rms) = endmember_finder(band_data,
-                                                                     spect_arr,
+                                                                     spect_cat,
                                                                      run_count)
                 # Gets the sorted indices
                 sorted_ind = np.argsort(abund_total_rms)
@@ -348,19 +461,7 @@ def main():
                 abundances = temp_abund
                 
 
-            else:
-                continue
 
-    """
-    test = np.array([[4, 2, 4],
-                    [3, 3, 3]])
-    print(test.shape)
-    end_test = np.array([[2, 1, 2],
-                        [1, 2, 1]])
-
-    abundance_test = amaps.NNLS(test, end_test)
-    print(abundance_test)
-    """
 
 main()
 
