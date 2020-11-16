@@ -20,6 +20,7 @@ import numpy as np
 import random
 import rasterio
 import pysptools.abundance_maps.amaps as amaps
+import matplotlib.pyplot as plt
 
 
 def args_parser():
@@ -128,14 +129,14 @@ def categorizer(name_arr, spect_arr):
 
     # A dictionary containing the categories for PRR samples to be
     # split up into. EDIT THE LISTS IF DIFFERENT CATEGORIZATION IS NEEDED
-    cat_dict = {0:[],
-                1:[],
-                2:[],
-                3:[],
-                4:[],
-                5:[],
-                6:[],
-                7:[]}
+    cat_dict = {0:['GRANITE'],
+                1:['GRANITE'],
+                2:['GRANITE'],
+                3:['GRANITE'],
+                4:['GRANITE'],
+                5:['GRANITE'],
+                6:['GRANITE'],
+                7:['GRANITE']}
 
     # The output, categorized arrays. Will be turned into
     # numpy arrays later
@@ -152,14 +153,17 @@ def categorizer(name_arr, spect_arr):
         for j in range(spect_size):
 
             # If the rock type of the sample is in the category...
-            if name_arr[j] in category:
+            if name_arr[j][1] in category:
 
                 # Put the sample's band data and its labels into the
                 # current category's respective lists (name and spect)
                 name_cat[i].append(name_arr[j])
                 spect_cat[i].append(spect_arr[j])
-        
 
+    # Turns the two list of lists into numpy arrays
+    name_cat = np.array(name_cat)
+    spect_cat = np.array(spect_cat)
+    
     return (name_cat, spect_cat)
 
 
@@ -347,11 +351,14 @@ def band_extractor(image_dir):
     Return:
     Returns the dimensions of the image with the band data. The band
     data is formatted as a 2D array, whose dimensions are pixel x band.
+    Also returns the non-data bands in their original band x row x column
+    format
     """
 
     # Variables used to hold the band data and the image dimensions,
     # respectively
     band_data = []
+    band_extr = []
     image_dim = 0
 
     # Opens the image
@@ -362,18 +369,27 @@ def band_extractor(image_dir):
     
     # For each band (from bands 1 through 8)...
     for band in range(1, 9):
-        # Save the band data in the array above
-       band_data.append(src.read(band).ravel())
+        # Save the band data in the array above. "Squishes" the 3D
+        # image stack into a 2D "line" stack, with the formatting
+        # displayed a few lines down
+        band_data.append(src.read(band).ravel())
+
+    # Adds the non-data bands into the extraneous band list.
+    # No need to lose the dimensioning unlike the above since these
+    # bands are not passed through the endmember extractor
+    for band in range(9, 19):
+        band_extr.append(src.read(band))
 
     # Closes the image
     src.close()
 
+    # FORMATTING SO FAR
     # At this point, the data is now in a 2D array that looks like this:
     # [[1st pixel, 2nd pixel, 3rd pixel, ... nth pixel], //1st band
     #  [1st pixel, 2nd pixel, 3rd pixel, ... nth pixel], //2nd band
     #   ...
     # This was done by combining the rows together so that the first pixel
-    # of the next row is right next to the last pixel of the current row
+    # of the n+1th row is right next to the last pixel of the nth row
 
     # Turns the list into a numpy array
     band_data = np.array(band_data)
@@ -381,10 +397,13 @@ def band_extractor(image_dir):
     # Swaps the rows and columns of the array. It is now pixel x band.
     band_data = band_data.transpose(1, 0)
 
-    # Returns the band data and image dimensions
-    return (band_data, image_dim)
+    # Turns the extraneous band list of list into a numpy array
+    band_extr = np.array(band_extr)
 
-def abundance_writer(image_dir, image_dim, band_data, abundances):
+    # Returns the band data and image dimensions
+    return (band_data, band_extr, image_dim)
+
+def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final):
     """
     Writes eight new bands into the passed in image. These bands
     are essentially true/false (1/0) for each of the eight rock
@@ -392,14 +411,65 @@ def abundance_writer(image_dir, image_dim, band_data, abundances):
     category exists is also held in here.
 
     Parameters:
-    image_dir  -
-    image_dim  -
-    band_data  -
-    abundances -
+    image_dir   - the directory of the input image
+    image_dim   - the dimensions of the image (row x column)
+    band_data   - the data held within each pixel and at each band
+    band_extr   - the extraneous bands in the image
+    abund_final - the final abundances that have the smallest RMS
 
     Return:
     None
     """
+
+    # Starts the process of turning the band data array back into a
+    # a format that allows for it to be written into an image...
+    # band x pixel
+    band_data = band_data.transpose(1, 0)
+
+    # Temporarily houses the properly dimensioned data
+    temp_band = []
+
+    # For each band...
+    for i in range(band_data.shape[0]):
+        # Unsquish the band pixels. Basically turn it back into an
+        # image
+        temp_band.append(np.reshape(band_data[i], image_dim))
+
+    # Replaces the squished image with the non-squished one
+    band_data = np.array(temp_band)
+
+
+    # Begins the dimensioning process with the abundances. It's the
+    # same thing as the process with the band data up above
+    abund_final = abund_final.transpose(1, 0)
+
+    # Temporarily holds the dimensioned abundances
+    temp_abund = []
+
+    # For each category...
+    for i in range(abund_final.shape[0]):
+        temp_abund.append(np.reshape(abund_final[i], image_dim))
+
+    # Replaces the squished abundances with the non-squished ones
+    abund_final = np.array(temp_abund)
+    
+    # Creates the bands that show whether or not a category exist
+    # EDIT THE CONDITION HERE TO MODIFY THE THRESHOLD FOR EXISTING
+    cat_exists = np.where(abund_final > 0.4, 1, 0)
+
+    """
+    plt.imshow(cat_exists[0])
+    plt.show()
+    print(cat_exists[0][110])
+    print(cat_exists[0][110].shape)
+    """
+
+    # Creates the array to be written to a file
+    final_arr = np.concatenate((band_data, band_extr))
+    final_arr = np.concatenate((final_arr, abund_final))
+
+    # Creates the filename of the image to be outputted
+    image_out = image_dir.replace('.tif', '_endmember.tif')
 
 
 
@@ -410,7 +480,7 @@ def main():
     #(working_dir, run_count) = args_parser()
 
     working_dir = 'C:/Users/Brian/Documents/Salvatore Research/test_image'
-    run_count = 5
+    run_count = 1
 
     # A list that contains all of the "_class" .tif files
     class_files = []
@@ -437,11 +507,14 @@ def main():
                 os.path.join(working_dir,
                              image.replace('.tif', '_endmember.tif')))
 
+            # If the endmembers of the image weren't extracted and outputted
             if not endmember_exist:
+                
                 # The file address of the image
                 image_dir = os.path.join(working_dir, image)
+                
                 # Gets the image's band data and dimensions
-                (band_data, image_dim) = band_extractor(image_dir)
+                (band_data, band_extr, image_dim) = band_extractor(image_dir)
 
                 # Gets the abundances, the endmembers used (in the form of indices),
                 # and the band and image RMS values
@@ -459,8 +532,11 @@ def main():
 
                 # Just overwrites the old abundances array with the sorted one
                 abundances = temp_abund
-                
 
+                abund_final = abundances[0]
+                
+                abundance_writer(image_dir, image_dim, band_data,
+                                 band_extr, abund_final)
 
 
 main()
