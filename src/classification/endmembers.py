@@ -352,7 +352,8 @@ def band_extractor(image_dir):
     Returns the dimensions of the image with the band data. The band
     data is formatted as a 2D array, whose dimensions are pixel x band.
     Also returns the non-data bands in their original band x row x column
-    format
+    format. The meta data is returned so that the output image of the
+    script has it
     """
 
     # Variables used to hold the band data and the image dimensions,
@@ -363,6 +364,9 @@ def band_extractor(image_dir):
 
     # Opens the image
     src = rasterio.open(image_dir)
+
+    # Gets the meta data of the image
+    meta = src.meta
 
     # Gets and saves the dimensions of the image
     image_dim = src.read(1).shape
@@ -401,9 +405,9 @@ def band_extractor(image_dir):
     band_extr = np.array(band_extr)
 
     # Returns the band data and image dimensions
-    return (band_data, band_extr, image_dim)
+    return (band_data, band_extr, image_dim, meta)
 
-def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final):
+def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final, meta):
     """
     Writes eight new bands into the passed in image. These bands
     are essentially true/false (1/0) for each of the eight rock
@@ -416,6 +420,7 @@ def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final):
     band_data   - the data held within each pixel and at each band
     band_extr   - the extraneous bands in the image
     abund_final - the final abundances that have the smallest RMS
+    meta        - the meta data of the passed in image
 
     Return:
     None
@@ -469,7 +474,17 @@ def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final):
     final_arr = np.concatenate((final_arr, abund_final))
 
     # Creates the filename of the image to be outputted
-    image_out = image_dir.replace('.tif', '_endmember.tif')
+    out_dir = image_dir.replace('.tif', '_endmember.tif')
+
+    print(meta)
+    meta['count'] = 26
+    print(meta)
+    
+    # Creates the new file...
+    with rasterio.open(out_dir, 'w', **meta) as dst:
+
+        # And writes the data/numbers to the new file
+        dst.write(final_arr)
 
 
 
@@ -514,7 +529,8 @@ def main():
                 image_dir = os.path.join(working_dir, image)
                 
                 # Gets the image's band data and dimensions
-                (band_data, band_extr, image_dim) = band_extractor(image_dir)
+                (band_data, band_extr, image_dim, meta) = \
+                            band_extractor(image_dir)
 
                 # Gets the abundances, the endmembers used (in the form of indices),
                 # and the band and image RMS values
@@ -536,7 +552,7 @@ def main():
                 abund_final = abundances[0]
                 
                 abundance_writer(image_dir, image_dim, band_data,
-                                 band_extr, abund_final)
+                                 band_extr, abund_final, meta)
 
 
 main()
