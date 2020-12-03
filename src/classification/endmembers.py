@@ -19,6 +19,7 @@ import argparse
 import numpy as np
 import random
 import rasterio
+import sys
 import pysptools.abundance_maps.amaps as amaps
 import matplotlib.pyplot as plt
 
@@ -61,8 +62,8 @@ def endmember_reader(working_dir):
     downsampled to.
     """
     
-    working_dir = ('C:/Users/Brian/Documents/Salvatore Research/' +
-                   'WIP/polar_rock_repo_multispectral_WV02.txt')
+    #working_dir = ('C:/Users/Brian/Documents/Salvatore Research/' +
+    #               'WIP/polar_rock_repo_multispectral_WV02.txt')
 
     # Creates two lists to store the descriptions of each sample and the
     # eight bands downsampled to, respectively
@@ -181,9 +182,9 @@ def endmember_finder(band_data, spect_cat, run_count):
     Return:
     Returns two arrays. The first contains the abundances of the endmembers
     in each run. run x endmember abundance. The second contains the indices
-    of those endmembers. run x endmember. KEEP IN MIND THAT EACH INDEX
-    CORRESPONDS TO ITS OWN CATEGORY. Also returns the band RMS values and
-    the total RMS value of each run
+    of those endmembers. run x endmember. KEEP IN MIND THAT EACH OF THESE
+    INDICES CORRESPONDS TO ITS OWN CATEGORY. Also returns the pixel RMS
+    values and the total RMS value of each run
     """
 
     # Keeps track of the sample used of each endmember extraction run
@@ -194,7 +195,7 @@ def endmember_finder(band_data, spect_cat, run_count):
 
     # Keeps track of the band and total RMS values of each run
     abund_total_rms = []
-    abund_band_rms = []
+    abund_pixel_rms = []
 
     # In each run...
     for i in range(run_count):
@@ -269,18 +270,18 @@ def endmember_finder(band_data, spect_cat, run_count):
 
         # Finds the RMS values between the bands and the total RMS value
         # of all of the bands put together
-        (band_rms, total_rms) = rms_finder(temp_endm, temp_abun, band_data)
+        (pixel_rms, total_rms) = rms_finder(temp_endm, temp_abun, band_data)
 
         # Adds the RMS values to their respective lists
         abund_total_rms.append(total_rms)
-        abund_band_rms.append(band_rms)
+        abund_pixel_rms.append(pixel_rms)
 
     # Turns the RMS lists into arrays
-    abund_band_rms = np.array(abund_band_rms)
+    abund_pixel_rms = np.array(abund_pixel_rms)
     abund_total_rms = np.array(abund_total_rms)
 
     # Returns the abundances, indices, and RMS values
-    return (abundances, index_list, abund_band_rms, abund_total_rms)
+    return (abundances, index_list, abund_pixel_rms, abund_total_rms)
 
 
 def rms_finder(endm_arr, abundances, band_data):
@@ -295,8 +296,8 @@ def rms_finder(endm_arr, abundances, band_data):
     band_data  - the measured data in each band in the image
 
     Return:
-    Returns two different RMS values. One contains the RMS values between each
-    band. The other contains the overall image RMS value.
+    Returns two different RMS values. One contains the RMS values for pixel.
+    The other contains the overall image RMS value.
     """
 
     # Holds all of the modelled band data
@@ -328,14 +329,14 @@ def rms_finder(endm_arr, abundances, band_data):
     # Gets the number of pixels in the image
     pixel_n = band_data.shape[0]
 
-    # Calculates the RMS value of each band
-    band_rms = np.sqrt(1/pixel_n * np.sum(diff_sq_arr, axis=1))
+    # Calculates the RMS with respect to each pixel
+    pixel_rms = np.sqrt(1/8 * np.sum(diff_sq_arr, axis=1))
 
-    # Calculates the RMS value of the entire image
+    # Calculates the RMS value with respect to the entire image
     total_rms = np.sqrt(1/(8*pixel_n) * np.sum(diff_sq_arr))
 
-    # Returns the band and image RMS values
-    return (band_rms, total_rms)
+    # Returns the pixel and image RMS values
+    return (pixel_rms, total_rms)
 
 
 def band_extractor(image_dir):
@@ -407,7 +408,8 @@ def band_extractor(image_dir):
     # Returns the band data and image dimensions
     return (band_data, band_extr, image_dim, meta)
 
-def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final, meta):
+def abundance_writer(image_dir, image_dim, band_data, band_extr,
+                     abund_final, rms_final, meta):
     """
     Writes eight new bands into the passed in image. These bands
     are essentially true/false (1/0) for each of the eight rock
@@ -419,12 +421,16 @@ def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final, me
     image_dim   - the dimensions of the image (row x column)
     band_data   - the data held within each pixel and at each band
     band_extr   - the extraneous bands in the image
-    abund_final - the final abundances that have the smallest RMS
+    abund_final - the final abundances that correspond to the run
+                  with the smallest image RMS value
+    rms_final   - the final pixel RMS values that correspond to the
+                  run with the smallest image RMS value
     meta        - the meta data of the passed in image
 
     Return:
     None
     """
+
 
     # Starts the process of turning the band data array back into a
     # a format that allows for it to be written into an image...
@@ -443,7 +449,6 @@ def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final, me
     # Replaces the squished image with the non-squished one
     band_data = np.array(temp_band)
 
-
     # Begins the dimensioning process with the abundances. It's the
     # same thing as the process with the band data up above
     abund_final = abund_final.transpose(1, 0)
@@ -457,6 +462,9 @@ def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final, me
 
     # Replaces the squished abundances with the non-squished ones
     abund_final = np.array(temp_abund)
+
+    # Unsquishes the RMS values per pixel, like the above
+    rms_unsquish = np.array([np.reshape(rms_final, image_dim)], dtype=np.float32)
     
     # Creates the bands that show whether or not a category exist
     # EDIT THE CONDITION HERE TO MODIFY THE THRESHOLD FOR EXISTING
@@ -472,13 +480,13 @@ def abundance_writer(image_dir, image_dim, band_data, band_extr, abund_final, me
     # Creates the array to be written to a file
     final_arr = np.concatenate((band_data, band_extr))
     final_arr = np.concatenate((final_arr, abund_final))
+    final_arr = np.concatenate((final_arr, rms_unsquish))
 
     # Creates the filename of the image to be outputted
     out_dir = image_dir.replace('.tif', '_endmember.tif')
 
-    print(meta)
-    meta['count'] = 26
-    print(meta)
+    # Changes the band count in the metadata 
+    meta['count'] = 27
     
     # Creates the new file...
     with rasterio.open(out_dir, 'w', **meta) as dst:
@@ -502,17 +510,25 @@ def main():
     # Keeps track of the number of the "_class" files
     class_count = 0
 
+    # Saves whether or not the endmember library exists 
+    endmember_lib_exist = False
+
     # Finds all of the ..._class.tif image filess in the directory
     for file in os.listdir(working_dir):
         if (file.endswith('_class.tif')):
             class_files.append(file)
             class_count += 1
+        elif file == "polar_rock_repo_multispectral_WV02.txt":
+            endmember_lib_exist = True
+            
 
     # If the class file does not exist...
     if class_count != 0:
 
         # Extract the downsampled PRR samples as potential endmembers
-        (name_arr, spect_arr) = endmember_reader(working_dir)
+        endmember_lib_dir = os.path.join(working_dir,
+                                         "polar_rock_repo_multispectral_WV02.txt")
+        (name_arr, spect_arr) = endmember_reader(endmember_lib_dir)
 
         (name_cat, spect_cat) = categorizer(name_arr, spect_arr)
         
@@ -522,8 +538,11 @@ def main():
                 os.path.join(working_dir,
                              image.replace('.tif', '_endmember.tif')))
 
+            if not endmember_lib_exist:
+                print("The endmember library does not exist!")
+
             # If the endmembers of the image weren't extracted and outputted
-            if not endmember_exist:
+            elif not endmember_exist:
                 
                 # The file address of the image
                 image_dir = os.path.join(working_dir, image)
@@ -532,27 +551,41 @@ def main():
                 (band_data, band_extr, image_dim, meta) = \
                             band_extractor(image_dir)
 
-                # Gets the abundances, the endmembers used (in the form of indices),
-                # and the band and image RMS values
+                # Gets the abundances, the endmembers used (in the form
+                # of indices), and the pixel and image RMS values
                 (abundances, index_list,
-                 abund_band_rms, abund_total_rms) = endmember_finder(band_data,
-                                                                     spect_cat,
-                                                                     run_count)
+                 abund_pixel_rms,
+                 abund_total_rms) = endmember_finder(band_data, spect_cat,
+                                                     run_count)
+
                 # Gets the sorted indices
                 sorted_ind = np.argsort(abund_total_rms)
 
                 # Uses it to sort the abundances based on run
                 temp_abund = []
+                temp_pixel_rms = []
                 for ind in sorted_ind:
                     temp_abund.append(abundances[ind])
+                    temp_pixel_rms.append(abund_pixel_rms[ind])
 
                 # Just overwrites the old abundances array with the sorted one
                 abundances = temp_abund
 
+                # Takes the abundances with the smallest image RMS value and
+                # saves it to be written
                 abund_final = abundances[0]
-                
+
+                # Saves the pixel RMS values of the run with the smallest
+                # image RMS value
+                pixel_rms_final = temp_pixel_rms[0]
+
+                # Writes the image
                 abundance_writer(image_dir, image_dim, band_data,
-                                 band_extr, abund_final, meta)
+                                 band_extr, abund_final, pixel_rms_final, meta)
+
+            if endmember_exist:
+
+                print(image.replace('.tif', '_endmember.tif') + ' already exists!')
 
 
 main()
