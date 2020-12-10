@@ -518,31 +518,38 @@ def main():
         if (file.endswith('_class.tif')):
             class_files.append(file)
             class_count += 1
-        elif file == "polar_rock_repo_multispectral_WV02.txt":
+        elif file == 'polar_rock_repo_multispectral_WV02.txt':
             endmember_lib_exist = True
-            
+
+    # Gets the directory endmember library text, which should be in
+    # the lib folder
+    lib_dir = os.path.join(os.path.dirname(sys.path[0]), 'lib')
+    endmember_lib_dir = os.path.join(lib_dir,
+                                     'polar_rock_repo_multispectral_WV02.txt')
+
+    # Sees if the endmember library even exists (True or False)
+    endmember_lib_exist = os.path.isfile(endmember_lib_dir)
 
     # If the class file does not exist...
-    if class_count != 0:
+    if class_count != 0 and endmember_exist:
 
-        # Extract the downsampled PRR samples as potential endmembers
-        endmember_lib_dir = os.path.join(working_dir,
-                                         "polar_rock_repo_multispectral_WV02.txt")
+        # Reads and saves the data in the endmember library
         (name_arr, spect_arr) = endmember_reader(endmember_lib_dir)
 
+        # Puts the endmembers in the endmember library into one of eight
+        # categories
         (name_cat, spect_cat) = categorizer(name_arr, spect_arr)
         
         # For each detected _class.tif image file...
         for image in class_files:
+            
+            # Checks to see if the output file exists
             endmember_exist = os.path.isfile(
                 os.path.join(working_dir,
                              image.replace('.tif', '_endmember.tif')))
 
-            if not endmember_lib_exist:
-                print("The endmember library does not exist!")
-
             # If the endmembers of the image weren't extracted and outputted
-            elif not endmember_exist:
+            if not endmember_exist:
                 
                 # The file address of the image
                 image_dir = os.path.join(working_dir, image)
@@ -583,9 +590,15 @@ def main():
                 abundance_writer(image_dir, image_dim, band_data,
                                  band_extr, abund_final, pixel_rms_final, meta)
 
-            if endmember_exist:
+            elif endmember_exist:
 
                 print(image.replace('.tif', '_endmember.tif') + ' already exists!')
+
+        # If the endmember library doesn't exist...
+        if not endmember_lib_exist:
+
+            # Print a message saying so and don't run the script
+            print('The endmember library does not exist!')        
 
 
 main()
