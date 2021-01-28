@@ -170,7 +170,7 @@ def categorizer(name_arr, spect_arr):
 
 def endmember_finder(band_data, spect_cat, run_count):
     """
-    Reads the .txt file containing the possible geologic endmembers. 
+    Extracts the endmembers
     Parameters:
     band_data - an array containing the band data collected from satellite
                 imagery. pixel x band
@@ -180,7 +180,7 @@ def endmember_finder(band_data, spect_cat, run_count):
                 extraction function, with each time using a different
                 set of 8 endmembers
     Return:
-    Returns two arrays. The first contains the abundances of the endmembers
+    Returns four arrays. The first contains the abundances of the endmembers
     in each run. run x endmember abundance. The second contains the indices
     of those endmembers. run x endmember. KEEP IN MIND THAT EACH OF THESE
     INDICES CORRESPONDS TO ITS OWN CATEGORY. Also returns the pixel RMS
@@ -296,7 +296,7 @@ def rms_finder(endm_arr, abundances, band_data):
     band_data  - the measured data in each band in the image
 
     Return:
-    Returns two different RMS values. One contains the RMS values for pixel.
+    Returns two different RMS values. One contains the RMS values for each pixel.
     The other contains the overall image RMS value.
     """
 
@@ -518,8 +518,6 @@ def main():
         if (file.endswith('_class.tif')):
             class_files.append(file)
             class_count += 1
-        elif file == 'polar_rock_repo_multispectral_WV02.txt':
-            endmember_lib_exist = True
 
     # Gets the directory endmember library text, which should be in
     # the lib folder
@@ -531,7 +529,7 @@ def main():
     endmember_lib_exist = os.path.isfile(endmember_lib_dir)
 
     # If the class file does not exist...
-    if class_count != 0 and endmember_exist:
+    if class_count != 0 and endmember_lib_exist:
 
         # Reads and saves the data in the endmember library
         (name_arr, spect_arr) = endmember_reader(endmember_lib_dir)
