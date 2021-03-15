@@ -13,6 +13,12 @@ The output file is sent to the folder the used image resides in.
 
 This script is safe to run multiple times in the same directory.
 
+HOW TO USE:
+Call the script from console and feed it an image directory like so:
+python endmember_extraction.py -ip [INSERT DIRECTORY WITHOUT BRACKETS]
+The given directory should directly house the images and will be the place
+the script outputs images
+
 HOW TO MODIFY:
 To change the threshold values that determine whether or not an endmember exists,
 change the values in the tuple passed into thresholder(). The order
@@ -38,8 +44,10 @@ def args_parser():
     """
     Reads the image directory passed in from console. Also reads in the
     number of runs the endmember extractor should do.
+    
     Parameters:
     None
+    
     Return:
     Returns a directory that has the images to be analyzed within it
     """
@@ -61,7 +69,8 @@ def endmember_reader(working_dir):
     Reads the .txt file containing the possible geologic endmembers.
     
     Parameters:
-    working_dir - the directory that was passed in from the console
+    working_dir - the directory of the endmember library text file.
+                  It should be in the Landcover pipeline in the lib folder
     
     Return:
     Returns two arrays. The first contains the sample ID, lithology type,
@@ -70,9 +79,6 @@ def endmember_reader(working_dir):
     downsampled to.
     """
     
-    #working_dir = ('C:/Users/Brian/Documents/Salvatore Research/' +
-    #               'WIP/polar_rock_repo_multispectral_WV02.txt')
-
     # Creates two lists to store the descriptions of each sample and the
     # eight bands downsampled to, respectively
     name_arr = []
@@ -133,15 +139,6 @@ def border_finder(band_data, image_dim):
     # Finds the pixels (by their matrix indices) that do not have any data
     border_arr = np.where(~band_data.any(axis=1), -99, 0)
 
-    # Creates an array full of zeros that match the dimensions of the
-    # band_data array
-    #border_arr = np.zeros((image_dim[0]*image_dim[1],8))
-
-    # For each detected beyond-border pixel...
-    #for index in border_ind[0]:
-        # Subtract every band value in the pixel by 999
-    #    border_arr[index] = border_arr[index] - 999
-
     return border_arr
 
 
@@ -150,7 +147,7 @@ def rock_caller(name_arr, endmember_arr, rock_num, plot_bool):
     Gets the spectrum of a PRR rock sample with the specified PRR number
 
     Parameters:
-    name_arr      - an array containing the names and PRR numbers of the the samples
+    name_arr      - an array containing the names and PRR numbers of the samples
     endmember_arr - an array containing the spectra of the samples
     rock_num      - a string of the sample's PRR code (ie PRR21153)
     plot_bool     - True for showing a plot, False if no plot desired
@@ -173,6 +170,7 @@ def rock_caller(name_arr, endmember_arr, rock_num, plot_bool):
 
     # Plots the rock spectrum if needed
     if plot_bool:
+        # The x axis is the wavelength in nm
         plt.plot([427, 478, 546, 608, 659, 724, 831, 908],
                  rock_spectrum)
         plt.show()
@@ -187,15 +185,13 @@ def endmember_finder(band_data, *endmembers):
     Parameters:
     band_data  - an array containing the band data collected from satellite
                  imagery. pixel x band
-    endmembers - an array containing the endmembers to be extracted.
+    endmembers - an tuple containing the endmembers to be extracted.
+                 Its size depends on how many endmembers were passed in
                  endmember x band
     
     Return:
-    Returns four arrays. The first contains the abundances of the endmembers
-    in each run. run x endmember abundance. The second contains the indices
-    of those endmembers. run x endmember. KEEP IN MIND THAT EACH OF THESE
-    INDICES CORRESPONDS TO ITS OWN CATEGORY. Also returns the pixel RMS
-    values and the total RMS value of each run
+    Returns an array of the abundances of the passed in endmembers. The size
+    varies depending on how many endmembers were passed in
     """
 
     # Turns the tuple of a variable number of endmembers into an array
@@ -232,19 +228,6 @@ def median_finder(name_arr, endmember_arr, category):
     # Since the PRR sample spectra are in the same order, the indices can be
     # used to pull the spectra
     cat_arr = endmember_arr[cat_ind[0]]
-
-
-    """
-    # For every rock in the PRR library...
-    for i in range(name_arr.shape[0]):
-        # If the type matches the given type...
-        if category == name_arr[i, 1]:
-            # Append it to the initialized list
-            cat_arr.append(endmember_arr)
-
-    # Turn the list into an array
-    cat_arr = np.array(cat_arr)
-    """
 
     # Gets the median spectrum
     median_spectrum = np.median(cat_arr, axis=0)
@@ -314,18 +297,14 @@ def band_extractor(image_dir):
     image_dir - the file address of the image
 
     Return:
-    Returns the dimensions of the image with the band data. The band
-    data is formatted as a 2D array, whose dimensions are pixel x band.
-    Also returns the non-data bands in their original band x row x column
-    format. The meta data is returned so that the output image of the
+    Returns the band data with the dimensions of the image. The band
+    data is formatted as a 2D array (pixel x band).
+    The meta data is returned so that the output image of the
     script has it
     """
 
-    # Variables used to hold the band data and the image dimensions,
-    # respectively
+    # List used to hold the band data 
     band_data = []
-    band_extr = []
-    image_dim = 0
 
     # Opens the image
     src = rasterio.open(image_dir)
@@ -362,11 +341,8 @@ def band_extractor(image_dir):
     # Swaps the rows and columns of the array. It is now pixel x band.
     band_data = band_data.transpose(1, 0)
 
-    # Turns the extraneous band list of list into a numpy array
-    band_extr = np.array(band_extr)
-
     # Returns the band data and image dimensions
-    return (band_data, band_extr, image_dim, meta)
+    return (band_data, image_dim, meta)
 
 
 def thresholder(abundances, thresholds):
@@ -410,7 +386,7 @@ def thresholder(abundances, thresholds):
 def abundance_writer(image_dir, image_dim, meta, border_arr, *bands):
     """
     Writes a band into the output image. Each band should contain
-    the values 0 (for absent), 1 (present), -99 (outside of image border).
+    the values 0 (absent), 1 (present), -99 (outside of image border).
 
     Parameters:
     image_dir - the directory of the input image
@@ -458,7 +434,7 @@ def main():
     working_dir = args_parser()
 
     #working_dir = "C:/Users/Brian/Documents/Salvatore Research/testfinalformat"
-    #working_dir = 'C:/Users/Brian/Documents/Salvatore Research/test_image_2'
+    #working_dir = "C:/Users/Brian/Documents/Salvatore Research/test_image_2"
 
     # A list that contains all of the "_class" .tif files
     class_files = []
@@ -469,15 +445,12 @@ def main():
     endmember_lib_exist = False
 
     # Finds all of the ..._class.tif image filess in the directory
-    ### NOTE IF CHECK BACK TO NORMAL LATER
     for file in os.listdir(working_dir):
         if (file.endswith(".tif") and not file.endswith("_endmember.tif")):
             class_files.append(file)
             class_count += 1
-        elif file == "polar_rock_repo_multispectral_WV02.txt":
-            endmember_lib_exist = True
 
-    # Gets the directory endmember library text, which should be in
+    # Gets the directory of the endmember library text, which should be in
     # the lib folder
     lib_dir = os.path.join(os.path.dirname(sys.path[0]), "lib")
     endmember_lib_dir = os.path.join(lib_dir,
@@ -538,8 +511,7 @@ def main():
                 image_dir = os.path.join(working_dir, image)
                 
                 # Gets the image's band data and dimensions
-                (band_data, band_extr, image_dim, meta) = \
-                            band_extractor(image_dir)
+                (band_data, image_dim, meta) = band_extractor(image_dir)
 
                 #"""
 
