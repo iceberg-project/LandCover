@@ -15,9 +15,11 @@ This script is safe to run multiple times in the same directory.
 
 HOW TO USE:
 Call the script from console and feed it an image directory like so:
-python endmember_extraction.py -ip [INSERT DIRECTORY WITHOUT BRACKETS]
+
+python endmember_extraction.py -ip "INSERT DIRECTORY WITH THE QUOTES"
+
 The given directory should directly house the images and will be the place
-the script outputs images
+the script outputs images.
 
 HOW TO MODIFY:
 To change the threshold values that determine whether or not an endmember exists,
@@ -191,7 +193,7 @@ def endmember_finder(band_data, *endmembers):
     
     Return:
     Returns an array of the abundances of the passed in endmembers. The size
-    varies depending on how many endmembers were passed in
+    varies depending on how many endmembers were passed in. pixel x band
     """
 
     # Turns the tuple of a variable number of endmembers into an array
@@ -253,26 +255,34 @@ def rms_finder(abundances, band_data, *endmembers):
     # Holds all of the modelled band data
     modelled_bands = []
 
-    # Keeps track of which abundance layer the loop below is on
-    abun_n = 0
+    # Keeps track of the simulated contributions to the data by each
+    # endmember
+    temp_arr = []
 
-    # For each pixel...
-    for pixel in abundances:
+    # Used as an index to access the abundances array
+    band_n = 0
 
-        # Temporary array that stores the modelled band values
-        temp_arr = []
+    # For each endmember...
+    for endmember in endmembers:
 
-        # For each pixel's abundances...
-        for i in range(len(pixel)):
-            # Multiply the abundance to the related endmember's band data
-            temp_arr.append(pixel[i] * endmembers[i])
+        # Multiplies endmember spectra with the corresponding abundances
+        # to produce the contribution of the endmember spectra in the
+        # image
+        simul_data = np.multiply(endmember, abundances[band_n, :,
+                                                       np.newaxis])
 
-        # Sum the numbers bandwise. So only 8 values, one value per band, are
-        # left behind. This is the modelled band of the pixel
-        temp_arr = np.sum(np.array(temp_arr), axis=1)
+        # Lowers the precision of the data to take less space
+        simul_data = simul_data.astype(np.float32)
 
-        # Append the modelled endmember contribution
-        modelled_bands.append(temp_arr)
+        # Appends the simulated contribution to the temporary array
+        temp_arr.append(simul_data)
+
+        # Adds one to the index
+        band_n += 1
+
+    # Sum the numbers bandwise. So only 8 values, one value per band, are
+    # left behind. This is the modelled band of the pixel
+    temp_arr = np.sum(np.array(temp_arr), axis=0)
 
     # Gets the square of the difference between the measured band data and
     # the modelled band data
@@ -478,7 +488,7 @@ def main():
         # Placeholder endmember. Has 0 as each band value. Used
         # for to-be-determined(TBD) bands in the extraction
         # process
-        zero_member = [0, 0, 0, 0, 0, 0, 0, 0]
+        zero_member = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         # ||||||||||||||||||||||||||||||||||||||||||||||||||||||
         
         # Given atmosphere, ice, and snow spectra for the first unmixing
@@ -520,18 +530,21 @@ def main():
                 
                 # Gets the abundances, the endmembers used (in the form
                 # of indices), and the pixel and image RMS values
+                print("Initial unmixing START")
+                
                 init_abun = endmember_finder(band_data, atm_spectrum, blueice_spectrum,
                                              snow_spectrum, rock_unmix_1,
                                              rock_unmix_2, zero_member,
                                              zero_member)
-
                 
+
+                print("Initial unmixing DONE")                
                 #outfile = open("abundances", "wb")
-                #pickle.dump(abundances, outfile)
+                #pickle.dump(init_abun, outfile)
                 #outfile.close()
                
                 #infile = open("abundances", "rb")
-                #init_abun = pickle.load(infile)[0]
+                #init_abun = pickle.load(infile)
                 #init_abun = np.array(init_abun)
                 #infile.close()
 
@@ -571,11 +584,14 @@ def main():
                 dark_binary = np.where(albedo_arr < 0.2, 1, 0)
                 water_binary = dark_binary * snowice_binary
 
+                
                 init_rms = rms_finder(init_abun, band_data,
                                       atm_spectrum, blueice_spectrum,
                                       snow_spectrum, rock_unmix_1,
                                       rock_unmix_2, zero_member,
                                       zero_member)
+                
+                
                 unknown_binary = np.where(init_abun > 0.7, 1, 0)
                 
                 # Combines the presence/absence binary arrays. Makes sure
@@ -587,6 +603,7 @@ def main():
 
                 # Calculates the atmospheric contribution using the abundances
                 # and the atmospheric spectrum
+                atm_abun = init_abun[:,0]
                 atm_contr = np.multiply(atm_abun[:, np.newaxis].astype(np.float32),
                                         atm_spectrum.astype(np.float32))
 
@@ -602,7 +619,7 @@ def main():
                 litrock_binary = np.where(pa_binary == 0, 1, 0)
 
                 # If all bands of a pixel are non-zero, the pixel is a rock
-                lit_geo = np.multiply(no_atm_data, _binary[:, np.newaxis])
+                lit_geo = np.multiply(no_atm_data, litrock_binary[:, np.newaxis])
 
                 # More mafic (Mg rich) dolerite endmember
                 more_dol = rock_caller(name_arr, spect_arr, "PRR12602", False)
@@ -612,19 +629,23 @@ def main():
                 granite = rock_caller(name_arr, spect_arr, "PRR21578", False)
                 # Sandstone/mudstone endmember
                 sandstone = rock_caller(name_arr, spect_arr, "PRR12805", False)
-        
+
+                print("Rock unmixing START")
+                
                 rock_abun = endmember_finder(lit_geo, more_dol,
                                              less_dol, granite,
                                              sandstone, zero_member,
                                              zero_member, zero_member)
+
+                print("Rock unmixing DONE")
                 
                 #outfile = open("rock_abun", "wb")
                 #pickle.dump(rock_abun, outfile)
                 #outfile.close()
 
-                #infile = open("rock_abun", "rb")
-                #rock_abun = pickle.load(infile)
-                #infile.close()
+                infile = open("rock_abun", "rb")
+                rock_abun = pickle.load(infile)
+                infile.close()
 
                 # {ABUNDANCES ORDER}:
                 # more_dol, less_dol, granite, sandstone, zero, zero, zero
@@ -715,7 +736,7 @@ def main():
                                  band_22, band_23, band_24, band_25,
                                  band_26, band_27, band_28, band_29,
                                  band_30, band_31, band_32, band_33,
-                                 band_34, band_35, rms_band):
+                                 band_34, band_35, rms_band)
 
             elif endmember_exist:
 

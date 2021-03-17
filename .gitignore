@@ -1,2 +1,6 @@
 
 src/classification/rock_abun
+src/classification/abundances
+src/classification/abundances_test1
+src/classification/abundances_test2
+src/classification/capstone_test_output.py
