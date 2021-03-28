@@ -656,7 +656,6 @@ def main():
                 plt.show()
                 """
 
-
                 # Calculates the atmospheric contribution using the abundances
                 # and the atmospheric spectrum
                 atm_abun = init_abun[:,0]
@@ -761,7 +760,8 @@ def main():
 
                 # =====================================================
                 # 3 - Snow/ice/water
-                icewater_data = np.multiply(snowice_binary[np.newaxis,:], no_atm_data)
+                icewater_data = np.multiply(snowice_binary[:,np.newaxis], no_atm_data)
+
                 print("Snow unmixing START")
                 icewater_abun = endmember_finder(blueice_spectrum, snow_spectrum,
                                                  zero_member, zero_member,
