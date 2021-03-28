@@ -761,7 +761,7 @@ def main():
 
                 # =====================================================
                 # 3 - Snow/ice/water
-                icewater_data = snowice_binary * no_atm_data
+                icewater_data = np.multiply(snowice_binary[np.newaxis,:], no_atm_data)
                 print("Snow unmixing START")
                 icewater_abun = endmember_finder(blueice_spectrum, snow_spectrum,
                                                  zero_member, zero_member,
