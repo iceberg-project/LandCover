@@ -550,7 +550,6 @@ def main():
                                              snow_spectrum, rock_unmix_1,
                                              rock_unmix_2, zero_member,
                                              zero_member)
-                
 
                 print("Initial unmixing DONE")
                 
@@ -603,6 +602,7 @@ def main():
                 dark_binary = np.where(albedo_arr < 0.2, 1, 0)
                 water_binary = dark_binary * snowice_binary
 
+                
                 # Gets the RMS of each pixel from this initial
                 # unmixing
                 init_rms = rms_finder(init_abun, band_data,
@@ -656,6 +656,7 @@ def main():
                 plt.show()
                 """
 
+                
                 # Calculates the atmospheric contribution using the abundances
                 # and the atmospheric spectrum
                 atm_abun = init_abun[:,0]
@@ -763,7 +764,8 @@ def main():
                 icewater_data = np.multiply(snowice_binary[:,np.newaxis], no_atm_data)
 
                 print("Snow unmixing START")
-                icewater_abun = endmember_finder(blueice_spectrum, snow_spectrum,
+                icewater_abun = endmember_finder(icewater_data,
+                                                 blueice_spectrum, snow_spectrum,
                                                  zero_member, zero_member,
                                                  zero_member, zero_member)
                 print("Snow unmixing END")
@@ -780,10 +782,11 @@ def main():
                 # 4 - TBD
                 fourth_unmixing = np.multiply(no_atm_data, 0)
                 print("Fourth unmixing START")
-                abundances_4 = endmember_finder(fourth_unmixing, zero_member,
+                abundances_4 = endmember_finder(fourth_unmixing,
                                                 zero_member, zero_member,
                                                 zero_member, zero_member,
-                                                zero_member, zero_member)
+                                                zero_member, zero_member,
+                                                zero_member)
                 print("Fourth unmixing END")
                 pa_arr_4 = thresholder(abundances_4,
                                        (0, 0, 0, 0, 0, 0, 0))
@@ -800,10 +803,11 @@ def main():
                 # 5 - TBD
                 fifth_unmixing = np.multiply(no_atm_data, 0)
                 print("Fifth unmixing START")
-                abundances_5 = endmember_finder(fifth_unmixing, zero_member,
+                abundances_5 = endmember_finder(fifth_unmixing,
                                                 zero_member, zero_member,
                                                 zero_member, zero_member,
-                                                zero_member, zero_member)
+                                                zero_member, zero_member,
+                                                zero_member)
                 print("Fifth unmixing END")
                 pa_arr_5 = thresholder(abundances_5,
                                        (0, 0, 0, 0, 0, 0, 0))
