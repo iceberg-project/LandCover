@@ -6,3 +6,4 @@ src/classification/abundances_test2
 src/classification/capstone_test_output.py
 src/classification/abundances_new
 src/classification/rock_abun_new
+src/classification/init_rms

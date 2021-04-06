@@ -240,6 +240,8 @@ def median_finder(name_arr, endmember_arr, category):
 def rms_finder(abundances, band_data, *endmembers):
     """
     Finds the RMS values of the output abundances.
+    Note: Each pixel RMS should be somewhere between 0 and 1, inclusive,
+          due to how RMS is defined
 
     Parameters:
     abundances - an array containing the abundances of the above
@@ -269,7 +271,7 @@ def rms_finder(abundances, band_data, *endmembers):
                                                        np.newaxis])
 
         # Lowers the precision of the data to take less space
-        simul_data = simul_data.astype(np.float32)
+        simul_data = simul_data.astype(np.float16)
 
         # Appends the simulated contribution to the temporary array
         temp_arr.append(simul_data)
@@ -611,15 +613,24 @@ def main():
                                       rock_unmix_2, zero_member,
                                       zero_member)
 
+                #outrms = open("init_rms", "wb")
+                #pickle.dump(init_rms, outrms)
+                #outrms.close()
+               
+                #inrms = open("init_rms", "rb")
+                #init_rms = pickle.load(inrms)
+                #init_rms = np.array(init_rms)
+                #inrms.close()
+
                 #plt.imshow(np.reshape(init_rms, image_dim))
-                #print("INIT RMS")
                 #plt.show()
+                #sys.exit()
 
                 # !!!!
                 # PLEASE CHANGE THE NUMBER AFTER THE > SIGN TO CHANGE
                 # THE THRESHOLD
                 # !!!!
-                unknown_binary = np.where(init_rms > 0.7, 1, 0)
+                unknown_binary = np.where(init_rms > 0.4, 1, 0)
                 
                 
                 # Combines the presence/absence binary arrays. Makes sure
@@ -825,7 +836,7 @@ def main():
                                       more_dol, less_dol, granite,
                                       sandstone, zero_member,
                                       zero_member, zero_member)
-                rms_band = np.where(rms_band > 1.5, 1, 0)
+                rms_band = np.where(rms_band > 0.4, 1, 0)
 
                 # =====================================================
                 # Writing the Output
