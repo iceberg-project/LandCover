@@ -532,6 +532,8 @@ def main():
 
             # If the endmembers of the image weren't extracted and outputted
             if not endmember_exist:
+
+                print("PROCESSING " + image)
                 
                 # The file address of the image
                 image_dir = os.path.join(working_dir, image)
