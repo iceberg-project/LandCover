@@ -449,9 +449,6 @@ def main():
     # to be randomly chosen
     working_dir = args_parser()
 
-    #working_dir = "C:/Users/Brian/Documents/Salvatore Research/testfinalformat"
-    #working_dir = "C:/Users/Brian/Documents/Salvatore Research/test_image_2"
-
     # A list that contains all of the "_class" .tif files
     class_files = []
     # Keeps track of the number of the "_class" files
@@ -480,11 +477,6 @@ def main():
 
         # Reads and saves the data in the endmember library
         (name_arr, spect_arr) = endmember_reader(endmember_lib_dir)
-
-        #prr_num = "PRR10983"
-        #print(prr_num)
-        #test = rock_caller(name_arr, spect_arr, prr_num, True)
-        #sys.exit()
 
 
         # ====================================================================
@@ -540,8 +532,6 @@ def main():
                 
                 # Gets the image's band data and dimensions
                 (band_data, image_dim, meta) = band_extractor(image_dir)
-
-                #"""
 
                 # =====================================================
                 # 1 - Initial
@@ -634,7 +624,6 @@ def main():
                 # !!!!
                 unknown_binary = np.where(init_rms > 0.4, 1, 0)
                 
-                
                 # Combines the presence/absence binary arrays. Makes sure
                 # it stays in a binary format so that the array can be used
                 # to extract the not snow/ice/shadowed regions from the
@@ -642,34 +631,6 @@ def main():
                 pa_binary = atm_binary + blueice_binary + snow_binary
                 pa_binary = np.where(pa_binary > 1, 1, pa_binary)
 
-                
-                """
-                plt.imshow(np.reshape(shadrock_binary, image_dim))
-                print("SHADROCK")
-                plt.show()
-                plt.imshow(np.reshape(shadice_binary, image_dim))
-                print("SHADICE")
-                plt.show()
-                plt.imshow(np.reshape(snowice_binary, image_dim))
-                print("SNOWICE")
-                plt.show()
-                
-                plt.imshow(np.reshape(unknown_binary, image_dim))
-                print("UNKNOWN")
-                plt.show()
-                                  
-                plt.imshow(np.reshape(snow_binary, image_dim))
-                print("SNOW")
-                plt.show()
-                plt.imshow(np.reshape(blueice_binary, image_dim))
-                print("BLUEICE")
-                plt.show()
-                plt.imshow(np.reshape(water_binary, image_dim))
-                print("WATER")
-                plt.show()
-                """
-
-                
                 # Calculates the atmospheric contribution using the abundances
                 # and the atmospheric spectrum
                 atm_abun = init_abun[:,0]
@@ -754,22 +715,6 @@ def main():
                 band_12 = pa_arr_2[4]
                 band_13 = pa_arr_2[5]
                 band_14 = pa_arr_2[6]
-
-                """
-                plt.imshow(np.reshape(more_dol_binary, image_dim))
-                print("MORE DOL")
-                plt.show()
-                plt.imshow(np.reshape(less_dol_binary, image_dim))
-                print("LESS DOL")
-                plt.show()
-                plt.imshow(np.reshape(granite_binary, image_dim))
-                print("GRANITE")
-                plt.show()
-                plt.imshow(np.reshape(sandstone_binary, image_dim))
-                print("SANDSTONE")
-                plt.show()
-                sys.exit()
-                """
                 
 
                 # =====================================================
