@@ -239,6 +239,7 @@ def main():
 
         # For each file in the folder...
         for file in os.listdir(folder_dir):
+            
             # if the file is a rad.tif image that doesn't contain
             # P1BS, save it
             if file.endswith('rad.tif') and ('P1BS') not in file:
@@ -250,48 +251,49 @@ def main():
             # else continue
             else:
                 continue
-        # Checks to see if the specmath.tif image exists
-        specmath_file_exists = os.path.isfile(os.path.join(folder_dir,
-                                                           rad_file.replace('.tif', '_atmcorr.tif')))
+            
+            # Checks to see if the output specmath.tif image exists
+            specmath_file_exists = os.path.isfile(os.path.join(folder_dir,
+                                                               rad_file.replace('.tif', '_atmcorr.tif')))
 
-        # If the specmath.tif image doesn't exist, create it
-        if not specmath_file_exists and avg_txt != '':
-            # Saves the directory of the atmcorr_regr.py file
-            atmotxt_dir = os.path.join(folder_dir, file_name + '.txt')
-            # Calls avgs_finder to retrieve the averages from the file
-            averages = avgs_finder(atmotxt_dir, False)
-            # Saves the directory of the rad.tif image
-            rad_dir = os.path.join(folder_dir, rad_file)
-            # Calls spec_mather to do the band math and write
-            # it to the new file
-            spec_mather(rad_dir, averages, folder_dir)
+            # If the specmath.tif image doesn't exist, create it
+            if not specmath_file_exists and avg_txt != '':
+                # Saves the directory of the atmcorr_regr.py file
+                atmotxt_dir = os.path.join(folder_dir, file_name + '.txt')
+                # Calls avgs_finder to retrieve the averages from the file
+                averages = avgs_finder(atmotxt_dir, False)
+                # Saves the directory of the rad.tif image
+                rad_dir = os.path.join(folder_dir, rad_file)
+                # Calls spec_mather to do the band math and write
+                # it to the new file
+                spec_mather(rad_dir, averages, folder_dir)
 
-            print(rad_file + ' has been processed!')
+                print(rad_file + ' has been processed!')
 
-        elif specmath_file_exists:
-            print(rad_file.replace('.tif', '_atmcorr.tif') + ' already exists!')
+            elif specmath_file_exists:
+                print(rad_file.replace('.tif', '_atmcorr.tif') + ' already exists!')
 
-        # Script does nothing if there isn't any radiance images
-        elif rad_file == '':
-            print('There are no radiance images in ' +
-                  folder_dir + '!')
+            # Script does nothing if there isn't any radiance images
+            elif rad_file == '':
+                print('There are no radiance images in ' +
+                      folder_dir + '!')
 
-        # If the output text file from atmcorr_regr.py doesn't exist in the
-        # specified directory, use the values in atmcorr_temp.txt in lib
-        # instead
-        elif avg_txt == '':
-            print('atmcorr_regr.py has not been run yet in the directory or ' +
-                  'its output file is missing. Using the temporary ' +
-                  'spectra values...')
-            # Uses the file containing the temporary spectra instead
-            atmotxt_temp = '../lib/atmcorr_temp.txt'
-            # Calls avgs_finder to retrieve the averages from the file
-            averages = avgs_finder(atmotxt_temp, True)
-            # Saves the directory of the rad.tif image
-            rad_dir = os.path.join(folder_dir, rad_file)
-            # Calls spec_mather to do the band math and write
-            # it to the new file
-            spec_mather(rad_dir, averages, folder_dir)
+            # If the output text file from atmcorr_regr.py doesn't exist in the
+            # specified directory, use the values in atmcorr_temp.txt in lib
+            # instead
+            elif avg_txt == '':
+                print('atmcorr_regr.py has not been run yet in the directory or ' +
+                      'its output file is missing. Using the temporary ' +
+                      'spectra values...')
+                # Uses the file containing the temporary spectra instead
+                atmotxt_temp = '../lib/atmcorr_temp.txt'
+                # Calls avgs_finder to retrieve the averages from the file
+                averages = avgs_finder(atmotxt_temp, True)
+                # Saves the directory of the rad.tif image
+                rad_dir = os.path.join(folder_dir, rad_file)
+                # Calls spec_mather to do the band math and write
+                # it to the new file
+                spec_mather(rad_dir, averages, folder_dir)
 
 
 if __name__ == '__main__':
