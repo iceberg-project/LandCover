@@ -40,6 +40,7 @@ import pysptools.abundance_maps.amaps as amaps
 import matplotlib.pyplot as plt
 import pickle
 import gc
+import time
 
 
 def args_parser():
@@ -359,6 +360,32 @@ def band_extractor(image_dir):
     # Returns the band data and image dimensions
     return (band_data, image_dim, meta)
 
+def time_printer(time1, time2):
+    """
+    Prints the time that has passed between time1 and time2. 
+
+    Parameters:
+    time1 - the first recorded time in seconds after Jan 1, 1970, 00:00:00
+    time2 - the second recorded time in seconds after Jan 1, 1970, 00:00:00
+
+    Return:
+    None
+    """
+
+    # Finds the difference in times
+    time_diff = time2 - time1
+
+    # Converts the time passed from seconds to hours, minutes, and seconds 
+    hours = int(time_diff // 3600)
+    time_diff -= hours * 3600
+    minutes = int(time_diff // 60)
+    time_diff -= minutes * 60
+    seconds = int(time_diff // 1)
+
+    print(str(hours) + " hour(s), " + str(minutes) + " minute(s), and " +
+          str(seconds) + " second(s) have passed since " +
+          "the start of this process")
+
 
 def thresholder(abundances, thresholds):
     """
@@ -539,6 +566,8 @@ def main():
                 # Gets the abundances, the endmembers used (in the form
                 # of indices), and the pixel and image RMS values
                 print("Initial unmixing START")
+
+                init_time1 = time.time()
                 
                 init_abun = endmember_finder(band_data, atm_spectrum, blueice_spectrum,
                                              snow_spectrum, rock_unmix_1,
@@ -546,6 +575,9 @@ def main():
                                              zero_member)
 
                 print("Initial unmixing DONE")
+
+                init_time2 = time.time()
+                time_printer(init_time1, init_time2)
                 
                 #outfile = open("abundances_new", "wb")
                 #pickle.dump(init_abun, outfile)
@@ -556,6 +588,9 @@ def main():
                 #init_abun = np.array(init_abun)
                 #infile.close()
 
+                plt.imshow(np.reshape(init_abun[:,2], image_dim))
+                plt.show()
+                
 
                 # {ABUNDANCES ORDER}:
                 # atm_spectrum, blueice_spectrum, snow_spectrum,
@@ -684,6 +719,8 @@ def main():
 
                 print("Rock unmixing START")
 
+                rock_time1 = time.time()
+
                 # Performs the unmixing process using the given rock
                 # endmembers
                 rock_abun = endmember_finder(lit_geo, more_dol,
@@ -692,6 +729,9 @@ def main():
                                              zero_member, zero_member)
 
                 print("Rock unmixing DONE")
+                
+                rock_time2 = time.time()
+                time_printer(rock_time1, rock_time2)
 
                 
                 #outfile = open("rock_abun_new", "wb")
@@ -722,11 +762,18 @@ def main():
                 icewater_data = np.multiply(snowice_binary[:,np.newaxis], no_atm_data)
 
                 print("Snow unmixing START")
+
+                snow_time1 = time.time()
+                
                 icewater_abun = endmember_finder(icewater_data,
                                                  blueice_spectrum, snow_spectrum,
                                                  zero_member, zero_member,
                                                  zero_member, zero_member)
                 print("Snow unmixing END")
+
+                snow_time2 = time.time()
+                time_printer(snow_time1, snow_time2)
+                
                 pa_arr_3 = thresholder(icewater_abun,
                                        (-1, -1, 0, 0, 0, 0))
 
@@ -740,12 +787,19 @@ def main():
                 # 4 - TBD
                 fourth_unmixing = np.multiply(no_atm_data, 0)
                 print("Fourth unmixing START")
+
+                fourth_time1 = time.time()
+                
                 abundances_4 = endmember_finder(fourth_unmixing,
                                                 zero_member, zero_member,
                                                 zero_member, zero_member,
                                                 zero_member, zero_member,
                                                 zero_member)
                 print("Fourth unmixing END")
+
+                fourth_time2 = time.time()
+                time_printer(fourth_time1, fourth_time2)
+                
                 pa_arr_4 = thresholder(abundances_4,
                                        (0, 0, 0, 0, 0, 0, 0))
                 band_22 = pa_arr_4[0]
@@ -761,12 +815,19 @@ def main():
                 # 5 - TBD
                 fifth_unmixing = np.multiply(no_atm_data, 0)
                 print("Fifth unmixing START")
+
+                fifth_time1 = time.time()
+                
                 abundances_5 = endmember_finder(fifth_unmixing,
                                                 zero_member, zero_member,
                                                 zero_member, zero_member,
                                                 zero_member, zero_member,
                                                 zero_member)
                 print("Fifth unmixing END")
+
+                fifth_time2 = time.time()
+                time_printer(fifth_time1, fifth_time2)
+                
                 pa_arr_5 = thresholder(abundances_5,
                                        (0, 0, 0, 0, 0, 0, 0))
                 band_29 = pa_arr_5[0]
@@ -779,10 +840,21 @@ def main():
 
                 # =====================================================
                 # Band 36: RMS
+
+                print("Finding RMS START")
+
+                rms_time1 = time.time()
+                
                 rms_band = rms_finder(rock_abun, lit_geo,
                                       more_dol, less_dol, granite,
                                       sandstone, zero_member,
                                       zero_member, zero_member)
+
+                print("Finding RMS END")
+
+                rms_time2 = time.time()
+                time_printer(rms_time1, rms_time2)
+                
                 rms_band = np.where(rms_band > 0.4, 1, 0)
 
                 # =====================================================
@@ -791,6 +863,10 @@ def main():
                 # Gets the out of image border array. -99 for pixels beyond
                 # the border and 0 otherwise
                 border_arr = border_finder(band_data, image_dim)
+
+                print("Writing " + image + " START")
+
+                writing_time1 = time.time()
                 
                 abundance_writer(image_dir, image_dim, meta, border_arr,
                                  shadrock_binary, shadice_binary, snowice_binary,
@@ -803,6 +879,11 @@ def main():
                                  band_26, band_27, band_28, band_29,
                                  band_30, band_31, band_32, band_33,
                                  band_34, band_35, rms_band)
+
+                print("Writing" + image + " END")
+
+                writing_time2 = time.time()
+                time_printer(writing_time1, writing_time2)
 
             elif endmember_exist:
 
