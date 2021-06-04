@@ -487,8 +487,11 @@ def main():
     # Finds all of the ..._class.tif image filess in the directory
     for file in os.listdir(working_dir):
         if (file.endswith(".tif") and not file.endswith("_endmember.tif")):
-            class_files.append(file)
-            class_count += 1
+            src = rasterio.open(os.path.join(working_dir, file))
+            band_count = src.meta['count']
+            if band_count == 8:
+                class_files.append(file)
+                class_count += 1
 
     # Gets the directory of the endmember library text, which should be in
     # the lib folder
@@ -588,8 +591,8 @@ def main():
                 #init_abun = np.array(init_abun)
                 #infile.close()
 
-                plt.imshow(np.reshape(init_abun[:,2], image_dim))
-                plt.show()
+                #plt.imshow(np.reshape(init_abun[:,2], image_dim))
+                #plt.show()
                 
 
                 # {ABUNDANCES ORDER}:
