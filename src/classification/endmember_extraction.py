@@ -489,6 +489,7 @@ def main():
         if (file.endswith(".tif") and not file.endswith("_endmember.tif")):
             src = rasterio.open(os.path.join(working_dir, file))
             band_count = src.meta['count']
+            src.close()
             if band_count == 8:
                 class_files.append(file)
                 class_count += 1
