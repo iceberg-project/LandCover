@@ -564,6 +564,22 @@ def main():
                 # Gets the image's band data and dimensions
                 (band_data, image_dim, meta) = band_extractor(image_dir)
 
+                out_dir = image_dir.replace('.tif', '_endmember.tif')
+
+                # Changes the band count in the metadata 
+                meta['count'] = len(bands)
+                # Changes the datatype
+                meta['dtype'] = np.int16
+                # Changes the nodata value to -99
+                meta['nodata'] = -99
+                # Specifies a lossless compression method for rasterio to use
+                # (the output file will be smaller while retaining information)
+                meta['compress'] = "LZW"
+
+                border_arr = border_finder(band_data, image_dim)
+
+                dst = rasterio.open(out_dir, 'w', **meta)
+                
                 # =====================================================
                 # 1 - Initial
                 
@@ -680,6 +696,13 @@ def main():
                 no_atm_data = band_data.astype(np.float32) - \
                               atm_contr.astype(np.float32)
 
+                dst.write_band(1, np.reshape(shadrock_binary,
+                                             image_dim).astype(np.int16))
+                dst.write_band(2, np.reshape(shadice_binary,
+                                             image_dim).astype(np.int16))
+                dst.write_band(3, np.reshape(snowice_binary,
+                                             image_dim).astype(np.int16))
+
 
                 # =====================================================
                 # 2 - Rocks
@@ -759,7 +782,29 @@ def main():
                 band_12 = pa_arr_2[4]
                 band_13 = pa_arr_2[5]
                 band_14 = pa_arr_2[6]
-                
+
+                dst.write_band(4, np.reshape(litrock_binary,
+                                             image_dim).astype(np.int16))
+                dst.write_band(5, np.reshape(band_5,
+                                             image_dim).astype(np.int16))
+                dst.write_band(6, np.reshape(band_6,
+                                             image_dim).astype(np.int16))
+                dst.write_band(7, np.reshape(unknown_binary,
+                                             image_dim).astype(np.int16))
+                dst.write_band(8, np.reshape(more_dol_binary,
+                                             image_dim).astype(np.int16))
+                dst.write_band(9, np.reshape(less_dol_binary,
+                                             image_dim).astype(np.int16))
+                dst.write_band(10, np.reshape(granite_binary,
+                                              image_dim).astype(np.int16))
+                dst.write_band(11, np.reshape(sandstone_binary,
+                                              image_dim).astype(np.int16))
+                dst.write_band(12, np.reshape(band_12,
+                                              image_dim).astype(np.int16))
+                dst.write_band(13, np.reshape(band_13,
+                                              image_dim).astype(np.int16))
+                dst.write_band(14, np.reshape(band_14,
+                                              image_dim).astype(np.int16))
 
                 # =====================================================
                 # 3 - Snow/ice/water
@@ -785,6 +830,21 @@ def main():
                 band_19 = pa_arr_3[1]
                 band_20 = pa_arr_3[2]
                 band_21 = pa_arr_3[3]
+
+                dst.write_band(15, np.reshape(snow_binary,
+                                              image_dim).astype(np.int16))
+                dst.write_band(16, np.reshape(blueice_binary,
+                                              image_dim).astype(np.int16))
+                dst.write_band(17, np.reshape(snow_binary,
+                                              image_dim).astype(np.int16))
+                dst.write_band(18, np.reshape(band_18,
+                                              image_dim).astype(np.int16))
+                dst.write_band(19, np.reshape(band_19,
+                                              image_dim).astype(np.int16))
+                dst.write_band(20, np.reshape(band_20,
+                                              image_dim).astype(np.int16))
+                dst.write_band(21, np.reshape(band_21,
+                                              image_dim).astype(np.int16))
                 
 
                 # =====================================================
@@ -813,6 +873,21 @@ def main():
                 band_26 = pa_arr_4[4]
                 band_27 = pa_arr_4[5]
                 band_28 = pa_arr_4[6]
+
+                dst.write_band(22, np.reshape(band_22,
+                                              image_dim).astype(np.int16))
+                dst.write_band(23, np.reshape(band_23,
+                                              image_dim).astype(np.int16))
+                dst.write_band(24, np.reshape(band_24,
+                                              image_dim).astype(np.int16))
+                dst.write_band(25, np.reshape(band_25,
+                                              image_dim).astype(np.int16))
+                dst.write_band(26, np.reshape(band_26,
+                                              image_dim).astype(np.int16))
+                dst.write_band(27, np.reshape(band_27,
+                                              image_dim).astype(np.int16))
+                dst.write_band(28, np.reshape(band_28,
+                                              image_dim).astype(np.int16))
                 
 
                 # =====================================================
@@ -842,6 +917,21 @@ def main():
                 band_34 = pa_arr_5[5]
                 band_35 = pa_arr_5[6]
 
+                dst.write_band(29, np.reshape(band_22,
+                                              image_dim).astype(np.int16))
+                dst.write_band(30, np.reshape(band_23,
+                                              image_dim).astype(np.int16))
+                dst.write_band(31, np.reshape(band_24,
+                                              image_dim).astype(np.int16))
+                dst.write_band(32, np.reshape(band_25,
+                                              image_dim).astype(np.int16))
+                dst.write_band(33, np.reshape(band_26,
+                                              image_dim).astype(np.int16))
+                dst.write_band(34, np.reshape(band_27,
+                                              image_dim).astype(np.int16))
+                dst.write_band(35, np.reshape(band_28,
+                                              image_dim).astype(np.int16))
+
                 # =====================================================
                 # Band 36: RMS
 
@@ -861,33 +951,11 @@ def main():
                 
                 rms_band = np.where(rms_band > 0.4, 1, 0)
 
-                # =====================================================
-                # Writing the Output
+                dst.write_band(36, np.reshape(rms_band,
+                                              image_dim).astype(np.int16))
+
+                dst.close()
                 
-                # Gets the out of image border array. -99 for pixels beyond
-                # the border and 0 otherwise
-                border_arr = border_finder(band_data, image_dim)
-
-                print("Writing " + image + " START")
-
-                writing_time1 = time.time()
-                
-                abundance_writer(image_dir, image_dim, meta, border_arr,
-                                 shadrock_binary, shadice_binary, snowice_binary,
-                                 litrock_binary, band_5, band_6, unknown_binary,
-                                 more_dol_binary, less_dol_binary, granite_binary,
-                                 sandstone_binary, band_12, band_13, band_14,
-                                 snow_binary, blueice_binary, water_binary,
-                                 band_18, band_19, band_20, band_21,
-                                 band_22, band_23, band_24, band_25,
-                                 band_26, band_27, band_28, band_29,
-                                 band_30, band_31, band_32, band_33,
-                                 band_34, band_35, rms_band)
-
-                print("Writing" + image + " END")
-
-                writing_time2 = time.time()
-                time_printer(writing_time1, writing_time2)
 
             elif endmember_exist:
 
