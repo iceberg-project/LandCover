@@ -722,7 +722,8 @@ def main():
                 
 
                 # If all bands of a pixel are non-zero, the pixel is a rock
-                lit_geo = np.multiply(no_atm_data, litrock_binary[:, np.newaxis])
+                lit_geo = np.multiply(np.float32(no_atm_data),
+                                      np.int16(litrock_binary[:, np.newaxis]))
 
                 # ||||||||||||||||||||||
                 # Some given endmembers. Uncomment these and comment the ones
@@ -822,7 +823,8 @@ def main():
 
                 # =====================================================
                 # 3 - Snow/ice/water
-                icewater_data = np.multiply(no_atm_data, snowice_binary[:,np.newaxis])
+                icewater_data = np.multiply(np.float32(no_atm_data),
+                                            np.int16(snowice_binary[:,np.newaxis]))
 
                 print("Snow unmixing START")
 
@@ -870,7 +872,7 @@ def main():
 
                 # =====================================================
                 # 4 - TBD
-                fourth_unmixing = np.multiply(no_atm_data, 0)
+                fourth_unmixing = np.multiply(np.float32(no_atm_data), 0)
                 print("Fourth unmixing START")
 
                 fourth_time1 = time.time()
@@ -920,7 +922,7 @@ def main():
 
                 # =====================================================
                 # 5 - TBD
-                fifth_unmixing = np.multiply(no_atm_data, 0)
+                fifth_unmixing = np.multiply(np.float32(no_atm_data), 0)
                 print("Fifth unmixing START")
 
                 fifth_time1 = time.time()
