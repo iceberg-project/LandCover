@@ -567,7 +567,7 @@ def main():
                 out_dir = image_dir.replace('.tif', '_endmember.tif')
 
                 # Changes the band count in the metadata 
-                meta['count'] = len(bands)
+                meta['count'] = 36
                 # Changes the datatype
                 meta['dtype'] = np.int16
                 # Changes the nodata value to -99
