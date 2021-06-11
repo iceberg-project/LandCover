@@ -696,6 +696,9 @@ def main():
                 no_atm_data = band_data.astype(np.float32) - \
                               atm_contr.astype(np.float32)
 
+                shadrock_binary += border_arr
+                shadice_binary += border_arr
+                snowice_binary += border_arr
                 dst.write_band(1, np.reshape(shadrock_binary,
                                              image_dim).astype(np.int16))
                 dst.write_band(2, np.reshape(shadice_binary,
@@ -783,6 +786,17 @@ def main():
                 band_13 = pa_arr_2[5]
                 band_14 = pa_arr_2[6]
 
+                litrock_binary += border_arr
+                band_5 += border_arr
+                band_6 += border_arr
+                unknown_binary += border_arr
+                more_dol_binary += border_arr
+                less_dol_binary += border_arr
+                granite_binary += border_arr
+                sandstone_binary += border_arr
+                band_12 += border_arr
+                band_13 += border_arr
+                band_14 += border_arr
                 dst.write_band(4, np.reshape(litrock_binary,
                                              image_dim).astype(np.int16))
                 dst.write_band(5, np.reshape(band_5,
@@ -808,14 +822,14 @@ def main():
 
                 # =====================================================
                 # 3 - Snow/ice/water
-                icewater_data = np.multiply(snowice_binary[:,np.newaxis], no_atm_data)
+                icewater_data = np.multiply(no_atm_data, snowice_binary[:,np.newaxis])
 
                 print("Snow unmixing START")
 
                 snow_time1 = time.time()
                 
                 icewater_abun = endmember_finder(icewater_data,
-                                                 blueice_spectrum, snow_spectrum,
+                                                 snow_spectrum, blueice_spectrum,
                                                  zero_member, zero_member,
                                                  zero_member, zero_member)
                 print("Snow unmixing END")
@@ -831,11 +845,18 @@ def main():
                 band_20 = pa_arr_3[2]
                 band_21 = pa_arr_3[3]
 
+                snow_binary += border_arr
+                blueice_binary += border_arr
+                water_binary += border_arr
+                band_18 += border_arr
+                band_19 += border_arr
+                band_20 += border_arr
+                band_21 += border_arr
                 dst.write_band(15, np.reshape(snow_binary,
                                               image_dim).astype(np.int16))
                 dst.write_band(16, np.reshape(blueice_binary,
                                               image_dim).astype(np.int16))
-                dst.write_band(17, np.reshape(snow_binary,
+                dst.write_band(17, np.reshape(water_binary,
                                               image_dim).astype(np.int16))
                 dst.write_band(18, np.reshape(band_18,
                                               image_dim).astype(np.int16))
@@ -874,6 +895,13 @@ def main():
                 band_27 = pa_arr_4[5]
                 band_28 = pa_arr_4[6]
 
+                band_22 += border_arr
+                band_23 += border_arr
+                band_24 += border_arr
+                band_25 += border_arr
+                band_26 += border_arr
+                band_27 += border_arr
+                band_28 += border_arr
                 dst.write_band(22, np.reshape(band_22,
                                               image_dim).astype(np.int16))
                 dst.write_band(23, np.reshape(band_23,
@@ -917,6 +945,13 @@ def main():
                 band_34 = pa_arr_5[5]
                 band_35 = pa_arr_5[6]
 
+                band_29 += border_arr
+                band_30 += border_arr
+                band_31 += border_arr
+                band_32 += border_arr
+                band_33 += border_arr
+                band_34 += border_arr
+                band_35 += border_arr
                 dst.write_band(29, np.reshape(band_22,
                                               image_dim).astype(np.int16))
                 dst.write_band(30, np.reshape(band_23,
@@ -951,6 +986,7 @@ def main():
                 
                 rms_band = np.where(rms_band > 0.4, 1, 0)
 
+                rms_band += border_arr
                 dst.write_band(36, np.reshape(rms_band,
                                               image_dim).astype(np.int16))
 
