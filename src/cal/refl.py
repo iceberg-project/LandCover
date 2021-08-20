@@ -178,7 +178,7 @@ def main():
                                  "count": "8",
                                  "dtype": "float32",
                                  "bigtiff": "YES",
-                                 "nodata": 255})
+                                 "nodata": 0.0})
                     
                     # collect image metadata
                     bands = ['BAND_C', 'BAND_B', 'BAND_G', 'BAND_Y', 'BAND_R',
@@ -223,9 +223,11 @@ def main():
                         # commented back in -Brian
                         for _ in bands:
                             # Read each layer and write it to stack
-                            refl = (src.read(i + 1) * math.pi * (dist ** 2) /
+                            band_mask = np.ma.masked_values(src.read(i + 1), 0)
+                            refl = (band_mask * math.pi * (dist ** 2) /
                                     (esun[i] * math.sin(math.radians(meansunel))
                                     ))
+                            refl.mask = np.ma.nomask
                             # print(refl[0,0],refl.dtype)
                             dst.write_band(i + 1, refl)
                             i += 1

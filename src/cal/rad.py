@@ -168,7 +168,7 @@ def main():
                         "count": "8",
                         "dtype": "float32",
                         "bigtiff": "YES",
-                        "nodata": 255})
+                        "nodata": 0.0})
 
                     # Creates the rad.tif file to be written into
                     with rasterio.open(os.path.join(folder_dir, f.replace('.tif', '_rad.tif')),
@@ -188,7 +188,9 @@ def main():
                             # print(src.read(i+1)[0,0]," ",abscalfactor," ",effbandwidth)
 
                             ### Read each layer and write it to stack
-                            rad = np.float32(gain[i])*src.read(i + 1)*(abscalfactor/effbandwidth)+np.float32(offset[i])
+                            band_mask = np.ma.masked_values(src.read(i + 1), 0)
+                            rad = np.float32(gain[i])*band_mask*(abscalfactor/effbandwidth)+np.float32(offset[i])
+                            rad.mask = np.ma.nomask
                             #print(rad[0,0],rad.dtype)
                             dst.write_band(i + 1, rad)
                             i += 1
