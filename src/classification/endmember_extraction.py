@@ -371,8 +371,8 @@ def band_extractor(image_dir):
     # Swaps the rows and columns of the array. It is now pixel x band.
     band_data = band_data.transpose(1, 0)
 
-    # Makes sure the format of the image is in nanometers and not
-    # micrometers
+    # Makes sure the format of the image is in micrometers and not
+    # nanometers
     if band_data[0,0] > 10:
         band_data = np.divide(band_data, 1000)
 
