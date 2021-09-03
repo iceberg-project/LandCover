@@ -33,26 +33,23 @@ They have no real associated endmember.
 import os
 import argparse
 import numpy as np
-import random
 import rasterio
 import sys
 import pysptools.abundance_maps.amaps as amaps
 import matplotlib.pyplot as plt
-import pickle
-import gc
 import time
 
 
 def args_parser():
     """
-    Reads the image directory passed in from console. Also reads in the
-    number of runs the endmember extractor should do.
+    Reads the image directory passed in from console. 
     
     Parameters:
     None
     
     Return:
-    Returns a directory that has the images to be analyzed within it
+    Returns a directory as a string that has the images inside of it to
+    be analyzed
     """
 
     # Creates an ArgumentParser object to hold the console input
@@ -98,7 +95,8 @@ def endmember_reader(working_dir):
     # Closes the file
     endmem_file.close()
 
-    # Stores the descriptions into the appropriate list
+    # Stores the descriptions into the appropriate list (only saves the first
+    # row aka the Polar Rock Repository (PRR) ID and the labelled rock type
     name_arr = temp_arr[0:2]
     
     # Lops off the extraneous information (what each descriptor is)
@@ -107,19 +105,23 @@ def endmember_reader(working_dir):
 
     # Converts the list to a numpy array
     name_arr = np.array(name_arr, dtype='str')
+    
     # Transposes the array to more easily access the information
-    # through indexing
+    # through indexing (it is now sample x description)
     name_arr = name_arr.transpose(1, 0)
 
-    # Stores the each sample's eight bands
+    # Stores each sample's eight bands
     spect_arr = temp_arr[3:]
+    
     # Lops off the extraneous information (what each band corresponds to)
     for i in range(len(spect_arr)):
         spect_arr[i] = spect_arr[i][1:]
 
-    # Converts the list to a numpy array
-    spect_arr = np.array(spect_arr, dtype='float')
+    # Converts the list to a numpy array. Lowers the precision
+    # to attempt to make the processing faster
+    spect_arr = np.array(spect_arr, dtype=np.float16)
     # Transposes the array to match the pysptools input format
+    # (it is now sample x band)
     spect_arr = spect_arr.transpose(1, 0)
 
     # Returns the two arrays
@@ -195,7 +197,7 @@ def endmember_finder(band_data, *endmembers):
     Return:
     Returns an array of the abundances of the passed in endmembers. The size
     varies depending on how many endmembers were passed in. pixel x band.
-    Also returns the largest sum of of the bands that was used to normalize
+    Also returns the largest sum of the bands that was used to normalize
     the abundances
     """
 
@@ -204,12 +206,16 @@ def endmember_finder(band_data, *endmembers):
 
     # Gets abundances
     abundances = amaps.NNLS(band_data, endmembers)
+    # Lowers the precision of the abundances to preserve RAM
+    abundances = np.float16(abundances)
 
+    # Gets the largest sum of the bands
     abundances_sum = np.sum(abundances, axis=1)
     norm_const = np.amax(abundances_sum)
 
+    # Divides the abundances by the largest sum to normalize the abundances
     abundances = np.divide(abundances, norm_const)
-        
+    
     return norm_const, abundances
 
 
@@ -339,15 +345,6 @@ def band_extractor(image_dir):
     # Gets and saves the dimensions of the image
     image_dim = src.read(1).shape
 
-    """
-    # For each band (from bands 1 through 8)...
-    for band in range(1, 9):
-        # Save the band data in the array above. "Squishes" the 3D
-        # image stack into a 2D "line" stack, with the formatting
-        # displayed a few lines down
-        band_data.append(src.read(band).ravel())
-    """
-
     # Reads the data in the image, reshapes the data by "flattening" each band,
     # and saves it. The array saved should be band x pixel
     band_data = np.reshape(src.read(), (8, -1))
@@ -366,13 +363,13 @@ def band_extractor(image_dir):
     # [1][2]...[n-1][n]FROM NEXT ROW->[1][2]...[n-1][n] etc
 
     # Turns the list into a numpy array
-    band_data = np.array(band_data)
+    band_data = np.array(band_data, dtype=np.float16)
 
     # Swaps the rows and columns of the array. It is now pixel x band.
     band_data = band_data.transpose(1, 0)
 
-    # Makes sure the format of the image is in micrometers and not
-    # nanometers
+    # Makes sure the pixel values of the image is less than 1 to match
+    # the top-of-atmosphere reflectance format
     if band_data[0,0] > 10:
         band_data = np.divide(band_data, 1000)
 
@@ -494,8 +491,7 @@ def abundance_writer(image_dir, image_dim, meta, border_arr, *bands):
 
 def main():
 
-    # Gets the working directory and the number of times for the endmembers
-    # to be randomly chosen
+    # Gets the working directory
     working_dir = args_parser()
 
     # A list that contains all of the "_class" .tif files
@@ -517,7 +513,7 @@ def main():
                 class_count += 1
 
     # Gets the directory of the endmember library text, which should be in
-    # the lib folder
+    # the lib folder and named "polar_rock_repo_multispectral_WV02.txt"
     lib_dir = os.path.join(os.path.dirname(sys.path[0]), "lib")
     endmember_lib_dir = os.path.join(lib_dir,
                                      "polar_rock_repo_multispectral_WV02.txt")
@@ -565,6 +561,7 @@ def main():
 
         # Gets two arbitrary samples that seem representative of the overall
         # rock spectrum
+        # NOTE: AT THE MOMENT THE ROCK SPECTRA ARE ZEROS ACROSS THE BOARD
         #rock_unmix_1 = rock_caller(name_arr, spect_arr, "PRR21553", False)
         #rock_unmix_2 = rock_caller(name_arr, spect_arr, "PRR12723", False)
         #rock_unmix_1 = rock_caller(name_arr, spect_arr, "PRR12112", False)
@@ -592,6 +589,8 @@ def main():
 
                 # Gets the image's band data and dimensions
                 (band_data, image_dim, meta) = band_extractor(image_dir)
+
+                band_data = np.float16(band_data)
 
 
                 """
@@ -630,20 +629,7 @@ def main():
                 print("Initial unmixing DONE")
 
                 init_time2 = time.time()
-                time_printer(init_time1, init_time2)
-                
-                #outfile = open("abundances_new", "wb")
-                #pickle.dump(init_abun, outfile)
-                #outfile.close()
-               
-                #infile = open("abundances_new", "rb")
-                #init_abun = pickle.load(infile)
-                #init_abun = np.array(init_abun)
-                #infile.close()
-
-                #plt.imshow(np.reshape(init_abun[:,2], image_dim))
-                #plt.show()
-                
+                time_printer(init_time1, init_time2)    
 
                 # {ABUNDANCES ORDER}:
                 # atm_spectrum, blueice_spectrum, snow_spectrum,
@@ -701,10 +687,6 @@ def main():
                 snowice_binary = np.where(snowice_binary > 1, 1,
                                           snowice_binary)
 
-                #plt.imshow(np.reshape(snowice_binary, image_dim))
-                #plt.show()
-                #quit()
-
                 # Not snow or ice = geology. Multiplying that by atm_binary
                 # gives the intersection of shadows and geology
                 shadrock_binary = np.where(snowice_binary == 1, 0, 1) *\
@@ -713,19 +695,31 @@ def main():
                 # Gets the shadowed ice binary by multiplying the
                 # snowice and atmosphere binaries together
                 shadice_binary = snowice_binary * atm_binary
-
-                #plt.imshow(np.reshape(shadice_binary, image_dim))
-                #plt.show()
-
-                """
+                
                 # Finds the presence/absence of liquid water using albedo
                 # and the snow/ice binary. The albedo here is defined as
                 # the average value of each pixel over all bands
                 # (b1+b2+b3+...+b8)/8 for each pixel
+                band_data_min = np.argmin(band_data, axis=1)
+                min_binary = np.where(band_data_min == 7,
+                                      1, 0)
                 albedo_arr = np.sum(band_data, axis=1)/8
-                dark_binary = np.where(albedo_arr < 0.2, 1, 0)
-                water_binary = dark_binary * snowice_binary
-                """
+                albedo_mean = np.mean(albedo_arr)
+
+                # !!!!!
+                # PLEASE CHANGE THE CONSTANT BEFORE albedo_mean TO CHANGE
+                # THE THRESHOLD
+                # !!!!!
+                dark_binary = np.where(albedo_arr < 0.20*albedo_mean, 1, 0)
+                
+                #plt.imshow(np.reshape(dark_binary, image_dim))
+                #plt.show()
+                #plt.imshow(np.reshape(snowice_binary, image_dim))
+                #plt.show()
+                #water_binary = dark_binary * snowice_binary * min_binary
+
+                #quit()
+                
 
                 
                 # Gets the RMS of each pixel from this initial
@@ -736,23 +730,14 @@ def main():
                                       rock_unmix_2, zero_member,
                                       zero_member)
 
-                #outrms = open("init_rms", "wb")
-                #pickle.dump(init_rms, outrms)
-                #outrms.close()
-               
-                #inrms = open("init_rms", "rb")
-                #init_rms = pickle.load(inrms)
-                #init_rms = np.array(init_rms)
-                #inrms.close()
-
                 #plt.imshow(np.reshape(init_rms, image_dim))
                 #plt.show()
                 #sys.exit()
 
-                # !!!!
+                # !!!!!
                 # PLEASE CHANGE THE NUMBER AFTER THE > SIGN TO CHANGE
                 # THE THRESHOLD
-                # !!!!
+                # !!!!!
                 unknown_binary = np.where(init_rms > 0.4, 1, 0)
                 
                 # Combines the presence/absence binary arrays. Makes sure
@@ -761,12 +746,9 @@ def main():
                 # image
                 pa_binary = atm_binary + blueice_binary + snow_binary
                 pa_binary = np.where(pa_binary > 1, 1, pa_binary)
-                #plt.imshow(np.reshape(pa_binary, image_dim))
-                #plt.show()
-                #quit()
 
                 # Calculates the atmospheric contribution using the abundances
-                # and the atmospheric spectrum
+                # and the given atmosphere spectrum
                 atm_abun = init_abun[:,0]
                 atm_abun = np.multiply(atm_abun, norm_const)
                 atm_contr = np.multiply(atm_abun[:, np.newaxis].astype(np.float32),
@@ -804,7 +786,7 @@ def main():
                 
 
                 # If all bands of a pixel are non-zero, the pixel is a rock
-                lit_geo = np.multiply(np.float32(no_atm_data),
+                lit_geo = np.multiply(np.float16(no_atm_data),
                                       np.int16(litrock_binary[:, np.newaxis]))
 
                 # ||||||||||||||||||||||
@@ -859,14 +841,6 @@ def main():
                 #plt.imshow(np.reshape(rock_abun[:,3], image_dim))
                 #plt.show()
                 #quit()
-                
-                #outfile = open("rock_abun_new", "wb")
-                #pickle.dump(rock_abun, outfile)
-                #outfile.close()
-
-                #infile = open("rock_abun_new", "rb")
-                #rock_abun = pickle.load(infile)
-                #infile.close()
 
                 # {ABUNDANCES ORDER}:
                 # more_dol, less_dol, granite, sandstone, zero, zero, zero
@@ -883,6 +857,8 @@ def main():
                 band_14 = pa_arr_2[6]
 
                 """
+                # --------------------------------
+                # Rock Writing
                 litrock_binary += border_arr
                 band_5 += border_arr
                 band_6 += border_arr
@@ -916,17 +892,18 @@ def main():
                                               image_dim).astype(np.int16))
                 dst.write_band(14, np.reshape(band_14,
                                               image_dim).astype(np.int16))
+                # --------------------------------
                 """
 
                 # =====================================================
                 # 3 - Snow/ice/water
-                icewater_data = np.multiply(np.float32(no_atm_data),
+                icewater_data = np.multiply(np.float16(no_atm_data),
                                             np.int16(pa_binary[:,np.newaxis]))
 
                 print("Snow unmixing START")
 
                 snow_time1 = time.time()
-                
+
                 (norm_const_icewater,
                  icewater_abun) = endmember_finder(icewater_data,
                                                    snow_spectrum, blueice_spectrum,
@@ -940,30 +917,33 @@ def main():
 
                 #plt.imshow(np.reshape(init_abun[:,5], image_dim))
                 #plt.show()
-                
+
+                # {ABUNDANCES ORDER}:
+                # snow, blueice, water, zero, zero, zero, zero
                 pa_arr_3 = thresholder(icewater_abun,
-                                       (-1, -1, 0.2, 0, 0, 0, 0))
+                                       (-1, -1, -1, 0, 0, 0, 0))
                 
-                water_binary = pa_arr_3[0]
                 band_18 = pa_arr_3[1]
                 band_19 = pa_arr_3[2]
                 band_20 = pa_arr_3[3]
                 band_21 = pa_arr_3[4]
 
-                plt.imshow(np.reshape(icewater_abun[:,0], image_dim))
-                plt.show()
-                plt.imshow(np.reshape(icewater_abun[:,1], image_dim))
-                plt.show()
-                plt.imshow(np.reshape(icewater_abun[:,2], image_dim))
-                plt.show()
-                quit()
+                #plt.imshow(np.reshape(icewater_abun[:,0], image_dim))
+                #plt.show()
+                #plt.imshow(np.reshape(icewater_abun[:,1], image_dim))
+                #plt.show()
+                #plt.imshow(np.reshape(icewater_abun[:,2], image_dim))
+                #plt.show()
+                #quit()
 
-                snowice_binary += water_binary
-                snowice_binary = np.where(snowice_binary > 1, 1, snowice_binary)
-                shadice_binary -= water_binary
-                shadice_binary = np.where(shadice_binary < 0, 0, shadice_binary)
+                #snowice_binary += water_binary
+                #snowice_binary = np.where(snowice_binary > 1, 1, snowice_binary)
+                #shadice_binary -= water_binary
+                #shadice_binary = np.where(shadice_binary < 0, 0, shadice_binary)
 
                 """
+                # --------------------------------
+                # Snow/ice/water writing
                 snow_binary += border_arr
                 blueice_binary += border_arr
                 water_binary += border_arr
@@ -985,12 +965,41 @@ def main():
                                               image_dim).astype(np.int16))
                 dst.write_band(21, np.reshape(band_21,
                                               image_dim).astype(np.int16))
+                # --------------------------------
                 """
-                
 
                 # =====================================================
                 # 4 - TBD
-                fourth_unmixing = np.multiply(np.float32(no_atm_data), 0)
+
+                # Soil_B235_20181222_CAL03_PROC_AVG 
+                # soil_b235 = [0.11252352673352867, 0.12831983620230558, 0.1543490784718553, 0.16897626234892552,
+                #              0.170874278850688, 0.1700069906420524, 0.1649994942062938, 0.16126979692425344]
+
+                # Soil_bowles_3_wet_soil 
+                # soil_bowles_3 = [0.06927708300920764, 0.07635483306892545, 0.09176553537867067, 0.10156158251867968,
+                #                  0.10109479399718689, 0.10009265182886719, 0.09560329223620738, 0.09430395495317109]
+
+                # Moss_bow02_opp_20190125_sat_4 
+                # moss_bow02 = [0.01654872544194769, 0.02375619996889153, 0.07387816933660053, 0.08310167513755072,
+                #               0.05866421811129647, 0.23223763121548482, 0.3174657749556898, 0.3649145578659193]
+
+                # Black_pla03_poop_20181218_dry_19 
+                # black_pla03 = [0.03534084783022605, 0.03822200227238683, 0.04661914674017628, 0.053665135162879324,
+                #                0.05732210195192126, 0.0823476803081346, 0.19045994806598507, 0.3438802278826755]
+
+                # Black_bow_opp_20190125_sat_14 
+                # black_bow = [0.025038663445809153, 0.025864771217631876, 0.02752827367931875, 0.026715511910279783,
+                #              0.025597984758045145, 0.030995298192429698, 0.07977468944204681, 0.1605709490607983]
+
+                # Red_bow02_20181230_inun_78 
+                # red_bow02 = [0.04839002553176692, 0.05255026783879072, 0.073166209982959, 0.1003938610429521,
+                #              0.0945747959436475, 0.1147058780894044, 0.11849448283638578, 0.10318868964045738]
+
+                # Orange_bow02_opp_20181222_inun_4
+                # orange_bow02 = [0.08495563453249949, 0.08499935161256106, 0.13044750132673766, 0.18020468396360786,
+                #                 0.154625878994879, 0.3666560697430291, 0.40091977205160917, 0.375634474616427]
+
+                fourth_unmixing = np.multiply(np.float16(no_atm_data), 0)
                 print("Fourth unmixing START")
 
                 fourth_time1 = time.time()
@@ -1017,6 +1026,8 @@ def main():
                 band_28 = pa_arr_4[6]
 
                 """
+                # --------------------------------
+                # Fourth unmixing writing
                 band_22 += border_arr
                 band_23 += border_arr
                 band_24 += border_arr
@@ -1038,6 +1049,7 @@ def main():
                                               image_dim).astype(np.int16))
                 dst.write_band(28, np.reshape(band_28,
                                               image_dim).astype(np.int16))
+                # --------------------------------
                 """
                 
 
@@ -1070,6 +1082,8 @@ def main():
                 band_35 = pa_arr_5[6]
 
                 """
+                # --------------------------------
+                # Fifth unmixing writing
                 band_29 += border_arr
                 band_30 += border_arr
                 band_31 += border_arr
@@ -1091,6 +1105,7 @@ def main():
                                               image_dim).astype(np.int16))
                 dst.write_band(35, np.reshape(band_28,
                                               image_dim).astype(np.int16))
+                # --------------------------------
                 """
 
                 # =====================================================
@@ -1109,14 +1124,22 @@ def main():
 
                 rms_time2 = time.time()
                 time_printer(rms_time1, rms_time2)
-                
+
+
+                # !!!!!
+                # PLEASE CHANGE THE NUMBER AFTER THE > SIGN TO CHANGE
+                # THE THRESHOLD
+                # !!!!!
                 rms_band = np.where(rms_band > 0.4, 1, 0)
 
 
                 """
+                # --------------------------------
+                # RMS band writing (currently the RMS for the rock unmixing)
                 rms_band += border_arr
                 dst.write_band(36, np.reshape(rms_band,
                                               image_dim).astype(np.int16))
+                # --------------------------------
 
                 dst.close()
                 """
@@ -1171,6 +1194,6 @@ def main():
             # Print a message saying so and don't run the script
             print('The endmember library does not exist!')        
 
-
-main()
+if __name__ == '__main__':
+    main()
 
